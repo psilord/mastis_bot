@@ -144,9 +144,9 @@ def do_translate(msg):
 		# TODO: Computation of height needs a reckoning.
 		HEIGHT += max(font_size, math.ceil(extent.height)) + \
 					font_vertical_padding
-	WIDTH = math.ceil(WIDTH)
+	WIDTH = math.ceil(WIDTH + font_extents[3]) # TODO: Wrong.
 	# ..and add descent to entail the last line.
-	HEIGHT = math.ceil(HEIGHT) + math.ceil(font_extents[1])
+	HEIGHT = math.ceil(HEIGHT + font_extents[1])
 
 	# ############################
 	# Now finally we can reallocate a new surface that is exactly what we need
