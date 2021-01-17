@@ -268,11 +268,16 @@ async def on_message(message):
 			await message.channel.send(response)
 
 		elif "xlate" in cmd:
+			max_len = 2048 # Just a bad hack to prevent overflow problems...
+			truncated_arg = \
+				(arg[:max_len] + '....') if len(arg) > max_len else arg
+
 			kt = ku.KiltaTokenizer()
-			mastis_text = kt.romanized_to_mastis(arg.strip())
+
+			mastis_text = kt.romanized_to_mastis(truncated_arg.strip())
 			dedented = tw.dedent(mastis_text).strip()
 			xlate = tw.fill(dedented, width=40)
-			response = f"{author_nickname} wrote:\n"
+			response = f"**{author_nickname}** wrote:\n"
 
 			# Read the file from the in memory FS and dump it to discord.
 			memfs = do_translate(xlate)
