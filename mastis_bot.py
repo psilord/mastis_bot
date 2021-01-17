@@ -118,6 +118,8 @@ def do_translate(msg):
 	#	cairo.FONT_WEIGHT_NORMAL)
 	ctx.set_font_face(MASTIS_FONT_FACE)
 	ctx.set_font_size(font_size)
+	# font_extents is (ascent, descent, height, max_x_advance, max_y_advance)
+	font_extents = ctx.font_extents()
 
 	# We act as if we draw the lines over each other cause it doesn't matter
 	# for extent calculation. But we move to the middle of the surface for
@@ -143,7 +145,8 @@ def do_translate(msg):
 		HEIGHT += max(font_size, math.ceil(extent.height)) + \
 					font_vertical_padding
 	WIDTH = math.ceil(WIDTH)
-	HEIGHT = math.ceil(HEIGHT)
+	# ..and add descent to entail the last line.
+	HEIGHT = math.ceil(HEIGHT) + math.ceil(font_extents[1])
 
 	# ############################
 	# Now finally we can reallocate a new surface that is exactly what we need
