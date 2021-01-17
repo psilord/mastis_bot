@@ -21,10 +21,10 @@ class KiltaTokenizer:
 		'ATTR'			: ['-'],
 
 		'AU'			: ['a', 'u'],
-		'AI_FIN'		: ['a', 'í'],
+		'AI_FIN'		: ['a', 'j'],
 		'AI'			: ['a', 'i'],
 
-		'UI_FIN'		: ['u', 'i'], # TODO: model the random choice of 'i/í'
+		'UI_FIN'		: ['u', 'i'], # TODO: usually i but sometimes j
 		'UI'			: ['u', 'i'],
 
 		'SHORT_I'		: ['i'],
@@ -65,6 +65,7 @@ class KiltaTokenizer:
 		'HHW'			: [],		# TODO: No encoding
 		'HW'			: ['x'],
 
+		# TODO: These are not processed correctly yet.
 		'TEN'			: ['['],
 		'ONE'			: ['1'],
 		'TWO'			: ['2'],
@@ -76,16 +77,17 @@ class KiltaTokenizer:
 		'EIGHT'			: ['8'],
 		'NINE'			: ['9'],
 
-		'PERIOD'		: ['9'],
-		'COMMA'			: ['9'],
-		'EXCLAMATION'	: ['9'],
-		'QUESTION'		: ['9'],
-		'COLON'			: ['9'],
-		'SEMI'			: ['9'],
+		'PERIOD'		: ['.'],
+		'COMMA'			: ['.'],
+		'EXCLAMATION'	: [],		# TODO: No encoding.
+		'QUESTION'		: [],		# TODO: No encoding
+		'COLON'			: [':'],
+		'SEMI'			: [';'],
 
 		'NEWLINE'		: ['\n'],	# TODO: No encoding
 		'SPACE'			: [' '],	# TODO: No encoding
 		'TAB'			: ['	'],	# TODO: No encoding
+		'SECTION'		: ['$', '%', '$'],
 
 		'UNK'			: [],		# TODO: No encoding
 
@@ -150,7 +152,7 @@ class KiltaTokenizer:
 			('HW',			r'[Hh][Ww]'),
 
 			# Digits
-			('TEN',			r'\w[1][0]\w'),
+			('TEN',			r'\b[1][0]\b'),
 			('ONE', 		r'[1]'),
 			('TWO', 		r'[2]'),
 			('THREE', 		r'[3]'),
@@ -168,6 +170,7 @@ class KiltaTokenizer:
 			('QUESTION',	r'[?]'),
 			('COLON',		r'[:]'),
 			('SEMI',		r'[;]'),
+			('SECTION',		r'[%]'), # TODO: Extension, ask wm about it.
 
 			# We want to specifically keep track of whitespace and what kind.
 			('NEWLINE',		r'[\n]'),
@@ -202,12 +205,26 @@ class KiltaTokenizer:
 	def tokenize_all(self, s):
 		return [token for token in self.tokenize(s)]
 	
-	def token_to_mastis(self, token):
-		if token in self.mastis_encoding:
-			return self.mastis_encoding[token]
-		return None
+	def token_to_mastis(self, token_type):
+		if token_type in self.mastis_encoding:
+			return self.mastis_encoding[token_type]
+		return []
 
+	# Convert the utterance from the romanized version to the mastis encoding.
+	def romanized_to_mastis(self, utterance):
+		mastis_encodings = []
+		for token in self.tokenize(utterance):
+			enc = self.token_to_mastis(token.typ)
+			mastis_encodings.extend(enc);
 
+		# flatten
+		#mastis_encodings = \
+		#	[item for sublist in mastis_encodings for item in sublist]
+
+		# join array into a string
+		return "".join(mastis_encodings)
+
+# --------------------------------------------------------------------------
 
 def main():
 	kilta_text = '''
@@ -220,14 +237,26 @@ def main():
 	kt = KiltaTokenizer()
 
 	# Demonstrate the lazy version
+	token_count = 0
 	for token in kt.tokenize(kilta_text):
+		token_count += 1
 		val = "\\n" if token.value == "\n" else token.value
 		val = "\\t" if val == "\t" else val 
 		enc = kt.token_to_mastis(token.typ)
 		print(f"{val:2} -> {token.typ:12} -> {enc}")
+	print(f"Lazy version found {token_count} tokens.")
+	
+	print("The kilta text:")
+	print(kilta_text)
+	print("The mastis text:")
+	print(kt.romanized_to_mastis(kilta_text))
 
 	# demonstrate the eager list version
-	#print(kt.tokenize_all(kilta_text))
+	ret = kt.tokenize_all(kilta_text)
+	print(f"Eager version found {len(ret)} tokens.")
+
+	if token_count != len(ret):
+		print("ERROR! The lazy and eager versions differed!")
 
 if __name__ == '__main__':
 	main()

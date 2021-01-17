@@ -25,6 +25,7 @@ from dotenv import load_dotenv
 from datetime import date
 from fs.memoryfs import MemoryFS
 import font_helper as fh
+import kilta_utils as ku
 
 load_dotenv()
 
@@ -33,6 +34,8 @@ load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_NAME = os.getenv("DISCORD_GUILD_NAME")
 CHANNEL_NAME = os.getenv("DISCORD_CHANNEL_NAME")
+MASTIS_FONT = os.path.abspath(os.getenv("MASTIS_FONT"))
+MASTIS_FONT_FACE = fh.create_cairo_font_face_for_file(MASTIS_FONT, 0)
 
 
 # Calculate Kílta cycle time
@@ -81,14 +84,16 @@ def do_cairo():
 	with memfs.open("translation.png", "wb") as fout:
 		surface.write_to_png(fout)
 
+	del ctx
 	surface.finish()
+	del surface
 
 	return memfs
 
 # This is horrible. Sorry.
 def do_translate(msg):
 	# fixed width assumption, or at least maximum constraint
-	font_size = 14
+	font_size = 48 
 	font_vertical_padding = 3
 	lines = msg.splitlines()
 	max_cols = len(max(lines, key=len))
@@ -109,8 +114,9 @@ def do_translate(msg):
 	surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, WIDTH, HEIGHT)
 	ctx = cairo.Context(surface)
 
-	ctx.select_font_face("DejaVu Sans Mono", cairo.FONT_SLANT_NORMAL, \
-		cairo.FONT_WEIGHT_NORMAL)
+	#ctx.select_font_face("DejaVu Sans Mono", cairo.FONT_SLANT_NORMAL, \
+	#	cairo.FONT_WEIGHT_NORMAL)
+	ctx.set_font_face(MASTIS_FONT_FACE)
 	ctx.set_font_size(font_size)
 
 	# We act as if we draw the lines over each other cause it doesn't matter
@@ -121,7 +127,9 @@ def do_translate(msg):
 		line_extents.append([line, ctx.text_extents(line)])
 
 	# Clean up cause we're dumping this surface and context now!
+	del ctx
 	surface.finish()
+	del surface
 
 	# ############################
 	# Recompute the correct size of the surface.
@@ -145,22 +153,18 @@ def do_translate(msg):
 	surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, WIDTH, HEIGHT)
 	ctx = cairo.Context(surface)
 
-	ctx.set_source_rgba(0.0, 0.0, 0.0, 1.0) # black
+	ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0) # background: white
 	ctx.rectangle(0, 0, WIDTH, HEIGHT)
 	ctx.fill()
-
-	# Border, if I want it, then increase image size to account for it.
-	#ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0) # white
-	#ctx.rectangle(0, 0, WIDTH, HEIGHT)
-	#ctx.stroke()
 
 	# ############################
 	# And finally render the text!
 	# ############################
-	ctx.select_font_face("DejaVu Sans Mono", cairo.FONT_SLANT_NORMAL, \
-		cairo.FONT_WEIGHT_NORMAL)
+	#ctx.select_font_face("DejaVu Sans Mono", cairo.FONT_SLANT_NORMAL, \
+	#	cairo.FONT_WEIGHT_NORMAL)
+	ctx.set_font_face(MASTIS_FONT_FACE)
 	ctx.set_font_size(font_size)
-	ctx.set_source_rgba(.85, .85, .85, 1)
+	ctx.set_source_rgba(0, 0, 0, 1) # foreground font color: black
 
 	# TODO: When it comes time to deal with the y_bearing and whatnot, there
 	# will be a reckoning in this snippet of code... Kerning is probably
@@ -184,7 +188,9 @@ def do_translate(msg):
 	with memfs.open("translation.png", "wb") as fout:
 		surface.write_to_png(fout)
 
+	del ctx
 	surface.finish()
+	del surface
 
 	return memfs
 
@@ -262,7 +268,9 @@ async def on_message(message):
 			await message.channel.send(response)
 
 		elif "xlate" in cmd:
-			dedented = tw.dedent(arg.upper()).strip()
+			kt = ku.KiltaTokenizer()
+			mastis_text = kt.romanized_to_mastis(arg.strip())
+			dedented = tw.dedent(mastis_text).strip()
 			xlate = tw.fill(dedented, width=40)
 			response = f"{author_nickname} wrote:\n"
 
