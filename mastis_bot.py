@@ -93,7 +93,7 @@ def do_cairo():
 # This is horrible. Sorry.
 def do_translate(msg):
 	# fixed width assumption, or at least maximum constraint
-	font_size = 48 
+	font_size = 30
 	font_vertical_padding = 3
 	lines = msg.splitlines()
 	max_cols = len(max(lines, key=len))
