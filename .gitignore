@@ -1,3 +1,10 @@
+# Special things for mastis_bot's repo
+.env
+
+# --------------------------------------------------------------------
+# Original templated python stuff below.
+# --------------------------------------------------------------------
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
