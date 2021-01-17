@@ -217,10 +217,6 @@ class KiltaTokenizer:
 			enc = self.token_to_mastis(token.typ)
 			mastis_encodings.extend(enc);
 
-		# flatten
-		#mastis_encodings = \
-		#	[item for sublist in mastis_encodings for item in sublist]
-
 		# join array into a string
 		return "".join(mastis_encodings)
 
