@@ -153,7 +153,7 @@ class KiltaTokenizer:
 			('H',			r'[Hh]'),
 			('KKW',			r'[Kk][Kk][Ww]'),
 			('KW',			r'[Kk][Ww]'),
-			('HKW',			r'[Hh][Hh][Ww]'),
+			('HHW',			r'[Hh][Hh][Ww]'),
 			('HW',			r'[Hh][Ww]'),
 
 			# Digits
