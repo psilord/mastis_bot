@@ -1,6 +1,7 @@
 # References:
 # https://realpython.com/how-to-make-a-discord-bot-python/
 # https://discordpy.readthedocs.io/en/latest/api.html
+# https://stackoverflow.com/questions/53693209/get-message-id-of-the-message-sent-by-my-bot
 # https://zetcode.com/gfx/pycairo/
 # https://pycairo.readthedocs.io/en/latest/reference/index.html
 # https://heuristically.wordpress.com/2011/01/31/pycairo-hello-world/
@@ -221,6 +222,17 @@ async def on_ready():
 	users = '\n - '.join([user.name for user in client.users])
 	print(f'Viewable Users:\n - {users}')
 
+# TODO: Keep track of the message ids that contained xlate commands and the
+# messages I generated in response to it. If the original message changed, then
+# attempt to edit the message I originally sent in place with the new 
+# translations.
+@client.event
+async def on_message_edit(before, after):
+	print("-- Message edited:")
+	print(f" Before: ({before.author.display_name}, msg id: {before.id})")
+	print(f"  - {before.content}")
+	print(f" After: ({after.author.display_name}, msg id: {after.id})")
+	print(f"  - {after.content}")
 
 @client.event
 async def on_message(message):
@@ -232,7 +244,7 @@ async def on_message(message):
 	# Figure out the consequences of that.
 	author_nickname = message.author.display_name
 
-	print(f"-- Observed message: \n"
+	print(f"-- Observed message (id: {message.id}): \n"
 		f" - guild: {message.guild.name}\n"
 		f" - channel: #{message.channel.name}\n"
 		f" - author: {message.author.display_name}({message.author.name})")
@@ -251,8 +263,12 @@ async def on_message(message):
 
 	# If there is cause to respond, do something.
 	# TODO: Very primitive for now.
+
 	p = re.compile(r'^\s*mastis-bot: (?P<cmd>\w+(-\w+)*)\s*(?P<arg>.*)$')
 	query = p.search(message.content.lower())
+	if not query:
+		return
+
 	cmd = query.group('cmd')
 	arg = query.group('arg')
 	if arg is not None:
@@ -269,7 +285,7 @@ async def on_message(message):
 				"help, aunka, test-image\n" \
 				"An example command is:\n" \
 				"mastis-bot: help" 
-			print(f"   - '{response}'")
+			print(f"   -|{response.rstrip()}")
 			await message.channel.send(response)
 
 		elif "xlate" in cmd:
@@ -283,6 +299,8 @@ async def on_message(message):
 			dedented = tw.dedent(mastis_text).strip()
 			xlate = tw.fill(dedented, width=40)
 			response = f"**{author_nickname}** wrote:\n"
+			print(f"   -|{response.rstrip()}")
+			print( "   -|[image]")
 
 			# Read the file from the in memory FS and dump it to discord.
 			memfs = do_translate(xlate)
@@ -293,7 +311,8 @@ async def on_message(message):
 
 		elif "test-cairo" in cmd:
 			response = f"{author_nickname}: Ok!"
-			print(f"   - '{response}'")
+			print(f"   -|{response.rstrip()}")
+			print( "   -|[image]")
 			# Read the file from the in memory FS and dump it to discord.
 			memfs = do_cairo()
 			with memfs.open('translation.png', 'rb') as fin:
@@ -303,12 +322,12 @@ async def on_message(message):
 
 		elif "aunka" in cmd:
 			response = f"{author_nickname}: Today's date is **{do_aunka()}**."
-			print(f"   - '{response}'")
+			print(f"   -|{response.rstrip()}")
 			await message.channel.send(response)
 
 		elif "test-image" in cmd:
 			response = f"{author_nickname}: Sending test image!"
-			print(f"   - '{response}'")
+			print(f"   -|{response.rstrip()}")
 
 			with open('/tmp/kilta.png', 'rb') as fp:
 				await message.channel.send(response, \
@@ -317,7 +336,7 @@ async def on_message(message):
 		else:
 			response = f"{author_nickname}: I don't understand the request: " \
 						f"'{cmd}'"
-			print(f"   - '{response}'")
+			print(f"   -|{response}")
 			await message.channel.send(response)
 
 client.run(TOKEN)
