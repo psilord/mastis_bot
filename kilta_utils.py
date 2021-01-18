@@ -150,14 +150,16 @@ class KiltaTokenizer:
 			('L',			r'[Ll]'),
 			('CCH',			r'[Cc][Cc][Hh]'),
 			('CH',			r'[Cc][Hh]'),
+
+			('KKW',			r'[Kk][Kk][Ww]'), # precedence order...
+			('KW',			r'[Kk][Ww]'),
 			('KK',			r'[Kk][Kk]'),
 			('K',			r'[Kk]'),
+
+			('HHW',			r'[Hh][Hh][Ww]'), # precedence order...
+			('HW',			r'[Hh][Ww]'),
 			('HH',			r'[Hh][Hh]'),
 			('H',			r'[Hh]'),
-			('KKW',			r'[Kk][Kk][Ww]'),
-			('KW',			r'[Kk][Ww]'),
-			('HHW',			r'[Hh][Hh][Ww]'),
-			('HW',			r'[Hh][Ww]'),
 
 			# Digits
 			('TEN',			r'\b[1][0]\b'),
