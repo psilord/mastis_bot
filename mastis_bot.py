@@ -267,7 +267,7 @@ async def on_message(message):
 	# If there is cause to respond, do something.
 	# TODO: Very primitive for now.
 
-	p = re.compile(r'^\s*mastis-bot: (?P<cmd>\w+(-\w+)*)\s*(?P<arg>.*)$')
+	p = re.compile(r'^\s*[.](?P<cmd>\w+(-\w+)*)\s*(?P<arg>.*)$')
 	query = p.search(message.content.lower())
 	if not query:
 		return
@@ -280,18 +280,19 @@ async def on_message(message):
 	if query:
 		print(f" [Sending response]")
 
-		if "help" in cmd:
-			response = f"{author_nickname}:\nInstructions:\n" \
-				"The basic format for asking me to do something is:\n" \
-				"mastis-bot: <cmd>\n" \
+		if cmd == "help":
+			response = f"**{author_nickname}**:\n" \
+				"A command must start with a period.\n" \
 				"The supported commands so far are:\n" \
-				"help, aunka, xlate\n" \
+				"**.help**  - This help\n" \
+				"**.aunka** - Today's date in Romanized Kílta\n" \
+				"**.m Romanized Kílta** - Translate utterance to **Mastis**\n" \
 				"An example command is:\n" \
-				"mastis-bot: help" 
+				".m Suríli." 
 			print(f"   -|{response.rstrip()}")
 			await message.channel.send(response)
 
-		elif "xlate" in cmd:
+		elif cmd == "m":
 			max_len = 2048 # Just a bad hack to prevent overflow problems...
 			truncated_arg = \
 				(arg[:max_len] + '....') if len(arg) > max_len else arg
@@ -312,12 +313,12 @@ async def on_message(message):
 					file=discord.File(fin, 'translation.png'))
 			memfs.close()
 
-		elif "aunka" in cmd:
+		elif cmd == "aunka":
 			response = f"{author_nickname}: Today's date is **{do_aunka()}**."
 			print(f"   -|{response.rstrip()}")
 			await message.channel.send(response)
 
-		elif "test-cairo" in cmd:
+		elif cmd == "test-cairo":
 			response = f"{author_nickname}: Ok!"
 			print(f"   -|{response.rstrip()}")
 			print( "   -|[image]")
@@ -330,7 +331,7 @@ async def on_message(message):
 
 		else:
 			response = f"{author_nickname}: I don't understand the request: " \
-						f"'{cmd}'"
+						f"'.{cmd}'"
 			print(f"   -|{response}")
 			await message.channel.send(response)
 
