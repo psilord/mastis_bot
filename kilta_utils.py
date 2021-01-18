@@ -9,6 +9,7 @@
 
 import collections
 import re
+import random as rnd
 
 KToken = collections.namedtuple('KToken', ['typ', 'value', 'line', 'column'])
 
@@ -24,7 +25,11 @@ class KiltaTokenizer:
 		'AI_FIN'		: ['a', 'j'],
 		'AI'			: ['a', 'i'],
 
-		'UI_FIN'		: ['u', 'i'], # TODO: usually i but sometimes j
+		# Lexer produces UI_FIN, but sometimes we exchange it with UI_FIN_ALT
+		# when converting the token stream to mastis.
+		'UI_FIN'		: ['u', 'i'],
+		'UI_FIN_ALT'	: ['u', 'j'],
+
 		'UI'			: ['u', 'i'],
 
 		'SHORT_I'		: ['i'],
@@ -84,9 +89,9 @@ class KiltaTokenizer:
 		'COLON'			: [':'],
 		'SEMI'			: [';'],
 
-		'NEWLINE'		: ['\n'],	# TODO: No encoding
-		'SPACE'			: [' '],	# TODO: No encoding
-		'TAB'			: ['	'],	# TODO: No encoding
+		'NEWLINE'		: ['\n'],
+		'SPACE'			: [' '],
+		'TAB'			: ['	'],
 		'SECTION'		: ['$', '%', '$'],
 
 		'UNK'			: [],		# TODO: No encoding
@@ -214,7 +219,12 @@ class KiltaTokenizer:
 	def romanized_to_mastis(self, utterance):
 		mastis_encodings = []
 		for token in self.tokenize(utterance):
-			enc = self.token_to_mastis(token.typ)
+			typ = token.typ
+			# Handle the (guessed) probabilities for UI_FIN
+			if typ == 'UI_FIN':
+				if rnd.random() <= .10:
+					typ = 'UI_FIN_ALT'
+			enc = self.token_to_mastis(typ)
 			mastis_encodings.extend(enc);
 
 		# join array into a string
