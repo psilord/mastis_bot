@@ -45,7 +45,6 @@ class KiltaTokenizer:
 		'LONG_A'		: ['á'],
 		'PP'			: ['P'],
 		'P'				: ['p'],
-		'VV'			: [],		# TODO: No encoding!
 		'V'				: ['v'],
 		'MM'			: ['M'],
 		'M'				: ['m'],
@@ -63,11 +62,9 @@ class KiltaTokenizer:
 		'CH'			: ['c'],
 		'KK'			: ['K'],
 		'K'				: ['k'],
-		'HH'			: [],		# TODO: No encoding
 		'H'				: ['h'],
 		'KKW'			: [],		# TODO: No encoding
 		'KW'			: ['q'],
-		'HHW'			: [],		# TODO: No encoding
 		'HW'			: ['x'],
 
 		# TODO: These are not processed correctly yet.
@@ -134,7 +131,6 @@ class KiltaTokenizer:
 			# Consonants (in order to greedily process long versions first)
 			('PP',			r'[Pp][Pp]'),
 			('P',			r'[Pp]'),
-			('VV',			r'[Vv][Vv]'),
 			('V',			r'[Vv]'),
 			('MM',			r'[Mm][Mm]'),
 			('M',			r'[Mm]'),
@@ -156,9 +152,7 @@ class KiltaTokenizer:
 			('KK',			r'[Kk][Kk]'),
 			('K',			r'[Kk]'),
 
-			('HHW',			r'[Hh][Hh][Ww]'), # precedence order...
-			('HW',			r'[Hh][Ww]'),
-			('HH',			r'[Hh][Hh]'),
+			('HW',			r'[Hh][Ww]'), # precedence order...
 			('H',			r'[Hh]'),
 
 			# Digits
