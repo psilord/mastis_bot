@@ -285,7 +285,7 @@ async def on_message(message):
 				"The basic format for asking me to do something is:\n" \
 				"mastis-bot: <cmd>\n" \
 				"The supported commands so far are:\n" \
-				"help, aunka, test-image\n" \
+				"help, aunka, xlate\n" \
 				"An example command is:\n" \
 				"mastis-bot: help" 
 			print(f"   -|{response.rstrip()}")
@@ -312,6 +312,11 @@ async def on_message(message):
 					file=discord.File(fin, 'translation.png'))
 			memfs.close()
 
+		elif "aunka" in cmd:
+			response = f"{author_nickname}: Today's date is **{do_aunka()}**."
+			print(f"   -|{response.rstrip()}")
+			await message.channel.send(response)
+
 		elif "test-cairo" in cmd:
 			response = f"{author_nickname}: Ok!"
 			print(f"   -|{response.rstrip()}")
@@ -322,19 +327,6 @@ async def on_message(message):
 				await message.channel.send(response, \
 					file=discord.File(fin, 'translation.png'))
 			memfs.close()
-
-		elif "aunka" in cmd:
-			response = f"{author_nickname}: Today's date is **{do_aunka()}**."
-			print(f"   -|{response.rstrip()}")
-			await message.channel.send(response)
-
-		elif "test-image" in cmd:
-			response = f"{author_nickname}: Sending test image!"
-			print(f"   -|{response.rstrip()}")
-
-			with open('/tmp/kilta.png', 'rb') as fp:
-				await message.channel.send(response, \
-					file=discord.File(fp, 'translation.png'))
 
 		else:
 			response = f"{author_nickname}: I don't understand the request: " \
