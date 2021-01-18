@@ -15,6 +15,7 @@
 # pip3 install -U discord.py
 # pip3 install -U fs
 # pip3 install -U pycairo
+# pip3 install -U freetype-py
 # python3 mastis-bot.py
 
 import os
