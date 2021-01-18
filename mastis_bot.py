@@ -2,6 +2,7 @@
 # https://realpython.com/how-to-make-a-discord-bot-python/
 # https://discordpy.readthedocs.io/en/latest/api.html
 # https://stackoverflow.com/questions/53693209/get-message-id-of-the-message-sent-by-my-bot
+# https://stackoverflow.com/questions/61553424/how-to-make-a-bot-edit-its-own-message-in-discord-py
 # https://zetcode.com/gfx/pycairo/
 # https://pycairo.readthedocs.io/en/latest/reference/index.html
 # https://heuristically.wordpress.com/2011/01/31/pycairo-hello-world/
