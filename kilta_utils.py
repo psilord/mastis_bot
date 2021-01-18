@@ -58,12 +58,12 @@ class KiltaTokenizer:
 		'R'				: ['r'],
 		'LL'			: ['L'],
 		'L'				: ['l'],
-		'CCH'			: [],		# TODO: No encoding!
+		'CCH'			: ['C'],
 		'CH'			: ['c'],
 		'KK'			: ['K'],
 		'K'				: ['k'],
 		'H'				: ['h'],
-		'KKW'			: [],		# TODO: No encoding
+		'KKW'			: ['Q'],
 		'KW'			: ['q'],
 		'HW'			: ['x'],
 
@@ -102,7 +102,7 @@ class KiltaTokenizer:
 		'TAB'			: ['	'],
 
 		# Everything else
-		'UNK'			: [],		# TODO: No encoding
+		'UNK'			: ['|'],	# oopsie character
 
 	}
 
