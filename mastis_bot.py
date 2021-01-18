@@ -9,6 +9,7 @@
 # https://stackoverflow.com/questions/32321216/making-a-memory-only-fileobject-in-python-with-pyfilesystem
 # https://docs.pyfilesystem.org/en/latest/interface.html
 # https://pymotw.com/2/textwrap/
+# https://freetype-py.readthedocs.io/en/latest/
 #
 # Crappy instructions to install:
 # sudo apt install python3-dotenv
