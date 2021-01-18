@@ -144,8 +144,10 @@ def do_translate(msg):
 		# TODO: Computation of height needs a reckoning.
 		HEIGHT += max(font_size, math.ceil(extent.height)) + \
 					font_vertical_padding
-	WIDTH = math.ceil(WIDTH + font_extents[3]) # TODO: Wrong.
-	# ..and add descent to entail the last line.
+	# TODO: in the next line, 3 is Wrong(tm). Need to figure out the x_advance
+	# of the last character on the longest line above and use that here.
+	WIDTH = math.ceil(WIDTH + 3)
+	# ..and add font's average descent to entail the last line's descenders.
 	HEIGHT = math.ceil(HEIGHT + font_extents[1])
 
 	# ############################
