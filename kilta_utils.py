@@ -18,20 +18,20 @@ class KiltaTokenizer:
 	# The Value is a list of encodings that represents it in the Mastis 
 	# TTF file.
 	mastis_encoding = {
+		# Grammatical markers
 		'TOPIC'			: ['/'],
 		'ATTR'			: ['-'],
 
+		# Dipthongs
 		'AU'			: ['a', 'u'],
-		'AI_FIN'		: ['a', 'j'],
-		'AI'			: ['a', 'i'],
+		'AI'			: ['a', 'j'],
 
-		# Lexer produces UI_FIN, but sometimes we exchange it with UI_FIN_ALT
+		# Lexer produces UI, but sometimes we exchange it with UI_ALT
 		# when converting the token stream to mastis.
-		'UI_FIN'		: ['u', 'i'],
-		'UI_FIN_ALT'	: ['u', 'j'],
-
 		'UI'			: ['u', 'i'],
+		'UI_ALT'		: ['u', 'j'],
 
+		# Consonants
 		'SHORT_I'		: ['i'],
 		'LONG_I'		: ['í'],
 		'SHORT_U'		: ['u'],
@@ -82,6 +82,7 @@ class KiltaTokenizer:
 		'EIGHT'			: ['8'],
 		'NINE'			: ['9'],
 
+		# Punctuation
 		'PERIOD'		: ['.'],
 		'COMMA'			: ['.'],
 		'EXCLAMATION'	: [],		# TODO: No encoding.
@@ -89,11 +90,15 @@ class KiltaTokenizer:
 		'COLON'			: [':'],
 		'SEMI'			: [';'],
 
+		# Section headers
+		'SECTION'		: ['$', '%', '$'],
+
+		# Whitespace
 		'NEWLINE'		: ['\n'],
 		'SPACE'			: [' '],
 		'TAB'			: ['	'],
-		'SECTION'		: ['$', '%', '$'],
 
+		# Everything else
 		'UNK'			: [],		# TODO: No encoding
 
 	}
@@ -108,11 +113,9 @@ class KiltaTokenizer:
 
 			# Dipthongs
 			('AU',			r'[Aa][Uu]'),
-			('AI_FIN',		r'[Aa][Ii]\b'),
 			('AI',			r'[Aa][Ii]'),
 
 			# Not dipthongs, but may Mastis affect rendering
-			('UI_FIN',		r'[Uu][Ii]\b'),
 			('UI',			r'[Uu][Ii]'),
 
 			# Vowels
@@ -220,10 +223,10 @@ class KiltaTokenizer:
 		mastis_encodings = []
 		for token in self.tokenize(utterance):
 			typ = token.typ
-			# Handle the (guessed) probabilities for UI_FIN
-			if typ == 'UI_FIN':
+			# Handle the (guessed) probabilities for UI_ALT
+			if typ == 'UI':
 				if rnd.random() <= .10:
-					typ = 'UI_FIN_ALT'
+					typ = 'UI_ALT'
 			enc = self.token_to_mastis(typ)
 			mastis_encodings.extend(enc);
 
