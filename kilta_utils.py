@@ -67,6 +67,12 @@ class KiltaTokenizer:
 		'KW'			: ['q'],
 		'HW'			: ['x'],
 
+		# nasal allophony
+		'NKW'			: ['g', 'q'],
+		'NHW'			: ['g', 'x'],
+		'NK'			: ['g', 'k'],
+		'NH'			: ['g', 'h'],
+
 		# TODO: These are not processed correctly yet.
 		'TEN'			: ['['],
 		'ONE'			: ['1'],
@@ -112,7 +118,7 @@ class KiltaTokenizer:
 			('AU',			r'[Aa][Uu]'),
 			('AI',			r'[Aa][Ii]'),
 
-			# Not dipthongs, but may Mastis affect rendering
+			# Not dipthongs, but affects Mastis rendering
 			('UI',			r'[Uu][Ii]'),
 
 			# Vowels
@@ -128,30 +134,34 @@ class KiltaTokenizer:
 			('SHORT_A',		r'[Aa]'),
 			('LONG_A',		r'[Áá]'),
 
-			# Consonants (in order to greedily process long versions first)
+			# Doubled consonants and nasal allophony which affects rendering.
+			('CCH',			r'[Cc][Cc][Hh]'),
+			('KKW',			r'[Kk][Kk][Ww]'),
 			('PP',			r'[Pp][Pp]'),
+			('MM',			r'[Mm][Mm]'),
+			('TT',			r'[Tt][Tt]'),
+			('SS',			r'[Ss][Ss]'),
+			('NKW',			r'[Nn][Kk][Ww]'), # nasal allophony cluster
+			('NHW',			r'[Nn][Hh][Ww]'), # nasal allophony cluster
+			('NK',			r'[Nn][Kk]'), # nasal allophony cluster
+			('NH',			r'[Nn][Hh]'), # nasal allophony cluster
+			('NN',			r'[Nn][Nn]'),
+			('RR',			r'[Rr][Rr]'),
+			('LL',			r'[Ll][Ll]'),
+			('KK',			r'[Kk][Kk]'),
+
+			# Single Consonants 
 			('P',			r'[Pp]'),
 			('V',			r'[Vv]'),
-			('MM',			r'[Mm][Mm]'),
 			('M',			r'[Mm]'),
-			('TT',			r'[Tt][Tt]'),
 			('T',			r'[Tt]'),
-			('SS',			r'[Ss][Ss]'),
 			('S',			r'[Ss]'),
-			('NN',			r'[Nn][Nn]'),
 			('N',			r'[Nn]'),
-			('RR',			r'[Rr][Rr]'),
 			('R',			r'[Rr]'),
-			('LL',			r'[Ll][Ll]'),
 			('L',			r'[Ll]'),
-			('CCH',			r'[Cc][Cc][Hh]'),
 			('CH',			r'[Cc][Hh]'),
-
-			('KKW',			r'[Kk][Kk][Ww]'), # precedence order...
-			('KW',			r'[Kk][Ww]'),
-			('KK',			r'[Kk][Kk]'),
+			('KW',			r'[Kk][Ww]'), # precedence order...
 			('K',			r'[Kk]'),
-
 			('HW',			r'[Hh][Ww]'), # precedence order...
 			('H',			r'[Hh]'),
 
