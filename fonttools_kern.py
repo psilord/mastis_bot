@@ -31,23 +31,27 @@ def main():
 	tt = ttLib.TTFont(os.path.abspath("./KiThree.ttf"))
 	print("Loaded ./KiThree.ttf")
 
+	# ######################
+	# Glyph chicanery
+	# ######################
+
 	glyph_names = tt.getGlyphNames()
 	print(f"Glyph Names: {glyph_names}")
 
 	glyph_ids = list(map(lambda x : tt.getGlyphID(x), glyph_names))
 	print(f"Glyph IDs: {glyph_ids}")
 
-	glyph_set = tt.getGlyphSet()
-	print(f"Glyph Set: {dict(glyph_set).keys()}")
-	g = glyph_set['g']
-	print(f"Glyph g: {g}")
+	glyph_map = tt.getReverseGlyphMap()
+	print(f"Glyph Reverse Map: {glyph_map}")
 
 	# ######################
 	# Get character code to glyph name map
 	# ######################
-	cmap = tt['cmap']
-	introspect("cmap", cmap)
-	#print(f"cmap: {cmap.getcmap()}")
+	cmap = tt.getBestCmap()
+	print(f"cmap: {cmap}")
+	for char_ord_val in cmap.keys():
+		# ord_val -> glyph_name
+		print(f"cmap entry: {char_ord_val}('{chr(char_ord_val)}') -> {cmap[char_ord_val]}")
 
 	# ######################
 	# Figure out access to Kerning table
