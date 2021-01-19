@@ -15,7 +15,7 @@ def get_attributes(obj):
 
 def main():
 	# Initialize the face
-	face = ft.Face(os.path.abspath("./KiThree.ttf"))
+	face = ft.Face(os.path.abspath("../KiThree.ttf"))
 	print(f"Loaded KiThree.ttf...")
 
 	# Get the defined char map
