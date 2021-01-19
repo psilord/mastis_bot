@@ -9,12 +9,14 @@
 # https://stackoverflow.com/questions/32321216/making-a-memory-only-fileobject-in-python-with-pyfilesystem
 # https://docs.pyfilesystem.org/en/latest/interface.html
 # https://pymotw.com/2/textwrap/
+# https://fonttools.readthedocs.io/en/latest/index.html
 #
 # Crappy instructions to install:
 # sudo apt install python3-dotenv
 # pip3 install -U discord.py
 # pip3 install -U fs
 # pip3 install -U pycairo
+# pip3 install -U fonttools
 # python3 mastis-bot.py
 
 import os
