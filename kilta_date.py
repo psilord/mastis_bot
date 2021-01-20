@@ -68,6 +68,7 @@ def compute_kilta_date():
 		'Víntán vë Aráva',		# November
 		'Ëssúr vë Kinta',		# December
 	]
+
 	au = [
 		'Kolkol',	# Butterfly
 		'Immira',	# Hawk
@@ -92,7 +93,9 @@ def compute_kilta_date():
 		'Sattun'		# Sunday
 	][weekday]
 
-	return (kaura[month], compute_kilta_ordinal(daynum), f"{au} {kiv} {tun}")
+	dayord = compute_kilta_ordinal(daynum)
+
+	return (kaura[month], f"{dayord} tun", f"{au} {kiv} {tun}")
 
 (month, day, aunka) = compute_kilta_date()
 
