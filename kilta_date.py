@@ -83,6 +83,8 @@ def compute_kilta_date():
 		'Itar'		# Ash
 	][days_since_epoch % 3]
 
+	aunka = f"{au} {kiv}"
+
 	tun = [
 		'Lastun',		# Monday
 		'Anlastun',		# Tuesday
@@ -93,11 +95,15 @@ def compute_kilta_date():
 		'Sattun'		# Sunday
 	][weekday]
 
-	dayord = compute_kilta_ordinal(daynum)
+	olta = compute_kilta_ordinal(daynum)
 
-	return (kaura[month], f"{dayord} tun", f"{au} {kiv} {tun}")
+	return (kaura[month], f"{olta} tun", f"{aunka}", f"{tun}")
 
-(month, day, aunka) = compute_kilta_date()
 
-print(f"{month} {day} {aunka}")
+def main():
+	(kaura, olta, aunka, tun) = compute_kilta_date()
+	print(f"{kaura} {olta} {aunka} {tun}")
+	
+if __name__ == '__main__':
+	main()
 
