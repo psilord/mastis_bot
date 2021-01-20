@@ -31,6 +31,7 @@ from datetime import date
 from fs.memoryfs import MemoryFS
 import font_helper as fh
 import kilta_utils as ku
+import kilta_date as kd
 import datetime as dt
 
 load_dotenv()
@@ -43,17 +44,6 @@ CHANNEL_NAME = os.getenv("DISCORD_CHANNEL_NAME")
 MASTIS_FONT = os.path.abspath(os.getenv("MASTIS_FONT"))
 MASTIS_FONT_FACE = fh.create_cairo_font_face_for_file(MASTIS_FONT, 0)
 
-
-# Calculate Kílta cycle time
-def do_aunka():
-	EPOCH = date(2001, 9, 5)	# Sep 5, 2001 - cycle initiated
-	today = date.today()
-	days = today - EPOCH
-	au = ['Kolkol', 'Immira', 'Nurës', 'Kokwara', 'Aunka'][days.days % 5]
-	kiv = ['Rin', 'Ussala', 'Itar'][days.days % 3]
-	tun = ['Lastun', 'Anlastun', 'Tillastun', 'Vallastun', 'Lólastun', 
-		   'Nirusattun', 'Sattun'][today.timetuple().tm_wday]
-	return "{} {} {}".format(au, kiv, tun)
 
 def do_cairo():
 	WIDTH, HEIGHT = 32, 32
@@ -316,7 +306,15 @@ async def on_message(message):
 			memfs.close()
 
 		elif cmd == "aunka":
-			response = f"**{author_nickname}**: Today's date is **{do_aunka()}**."
+			kaura, olta, aunka, tun = kd.compute_kilta_date()
+			response = f"**{author_nickname}**: Today's anuka is **{aunka}**."
+			print(f"   -|{response.rstrip()}")
+			await message.channel.send(response)
+
+		elif cmd == "date":
+			kaura, olta, aunka, tun = kd.compute_kilta_date()
+			kilta_date = f"{kaura} {olta} {aunka} {tun}"
+			response = f"**{author_nickname}**: Today's date is **{kilta_date}**."
 			print(f"   -|{response.rstrip()}")
 			await message.channel.send(response)
 
