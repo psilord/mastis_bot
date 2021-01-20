@@ -10,6 +10,7 @@
 # https://docs.pyfilesystem.org/en/latest/interface.html
 # https://pymotw.com/2/textwrap/
 # https://fonttools.readthedocs.io/en/latest/index.html
+# https://howchoo.com/g/ywi5m2vkodk/working-with-datetime-objects-and-timezones-in-python
 #
 # Crappy instructions to install:
 # sudo apt install python3-dotenv
