@@ -31,6 +31,7 @@ from datetime import date
 from fs.memoryfs import MemoryFS
 import font_helper as fh
 import kilta_utils as ku
+import datetime at dt
 
 load_dotenv()
 
@@ -315,7 +316,7 @@ async def on_message(message):
 			memfs.close()
 
 		elif cmd == "aunka":
-			response = f"{author_nickname}: Today's date is **{do_aunka()}**."
+			response = f"**{author_nickname}**: Today's date is **{do_aunka()}**."
 			print(f"   -|{response.rstrip()}")
 			await message.channel.send(response)
 
