@@ -308,7 +308,7 @@ async def on_message(message):
 
 		elif cmd == "aunka":
 			kaura, olta, aunka, tun = kd.compute_kilta_date()
-			response = f"**{author_nickname}**: Today's anuka is **{aunka}**."
+			response = f"**{author_nickname}**: Today's aunka is **{aunka}**."
 			print(f"   -|{response.rstrip()}")
 			await message.channel.send(response)
 
