@@ -10,6 +10,8 @@
 import collections
 import re
 import random as rnd
+import argparse
+import fileinput
 
 KToken = collections.namedtuple('KToken', ['typ', 'value', 'line', 'column'])
 
@@ -241,13 +243,16 @@ class KiltaTokenizer:
 
 # --------------------------------------------------------------------------
 
-def main():
+def do_unit_test():
 	kilta_text = '''
 		Këkketë rin in tuirachún nútokolsa li chanítirë. 
 		Ívu ahëkará ermúlëstët, tuirachún ahëkará tin ochukár, 
 		emmot li vonin chaso. 
 		Luë rin në ahëkará mai tíchët om mai oto.
 	'''
+
+	print("The kilta text:")
+	print(kilta_text)
 
 	kt = KiltaTokenizer()
 
@@ -261,7 +266,7 @@ def main():
 		print(f"{val:2} -> {token.typ:12} -> {enc}")
 	print(f"Lazy version found {token_count} tokens.")
 	
-	print("The kilta text:")
+	print("The kilta text (again):")
 	print(kilta_text)
 	print("The mastis text:")
 	print(kt.romanized_to_mastis(kilta_text))
@@ -272,6 +277,28 @@ def main():
 
 	if token_count != len(ret):
 		print("ERROR! The lazy and eager versions differed!")
+
+def do_file_or_stdin():
+	kt = KiltaTokenizer()
+	for line in fileinput.input():
+		ret = kt.romanized_to_mastis(line.rstrip())
+		print(ret)
+
+def main():
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-t", "--test", \
+		help="Run internal test suite", \
+		action="store_true")
+	parser.add_argument("file", \
+		help="File to translate, stdin otherwise", \
+		nargs="*", \
+		default="-")
+	args = parser.parse_args()
+
+	if (args.test):
+		do_unit_test()
+	else:
+		do_file_or_stdin()
 
 if __name__ == '__main__':
 	main()
