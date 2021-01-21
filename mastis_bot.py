@@ -277,7 +277,8 @@ async def on_message(message):
 				"A command must start with a period.\n" \
 				"The supported commands so far are:\n" \
 				"**.help**  - This help\n" \
-				"**.aunka** - Today's date in Romanized Kílta\n" \
+				"**.aunka** - Today's aunka in Romanized Kílta\n" \
+				"**.date** - Today's date in Romanized Kílta\n" \
 				"**.m Romanized Kílta** - Translate utterance to **Mastis**\n" \
 				"An example command is:\n" \
 				".m Suríli." 
