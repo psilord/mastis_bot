@@ -211,6 +211,11 @@ class MastisBotClient(discord.Client):
 	# for the response.
 	bot_replies = {}
 
+	# Used for iterative testing of bot message editing.
+	# TODO: It is not possible to edit image attachement in Discord yet. 
+	# So this test code is commented out until it works and I can continue.
+	target_message_id = None
+
 	# ###################################################################
 	# Utility Functions
 	# ###################################################################
@@ -268,6 +273,29 @@ class MastisBotClient(discord.Client):
 		rmsg = await self.send_or_edit_response(message, response, None)
 		print(f"   - Response message id: {rmsg.id}")
 		return rmsg
+
+	# TODO: It is not possible to edit image attachement in Discord yet. 
+	# So this test code is commented out until it works and I can continue.
+	#async def command_set_target(self, message, arg):
+	#	print(f" [Sending response]")
+	#	author_nickname = get_nick(message)
+	#	response = f"{author_nickname}: This is the target message."
+	#	rmsg = await self.send_or_edit_response(message, response, None)
+	#	print(f"   - Response message id: {rmsg.id}")
+	#	self.target_message_id = rmsg.id
+	#	return rmsg
+
+	# TODO: It is not possible to edit image attachement in Discord yet. 
+	# So this test code is commented out until it works and I can continue.
+	#async def command_edit_target(self, message, arg):
+	#	author_nickname = get_nick(message)
+	#	if self.target_message_id:
+	#		print("  - Attempting to edit target message!")
+	#		msg = await message.channel.fetch_message(self.target_message_id)
+	#		print(f"  - Fetched: {msg}")
+	#		ret = await msg.edit(content="Message edited!")
+	#		print(f"  - Edited: {ret}")
+	#	return None
 
 	async def command_test_cairo(self, message, arg):
 		# Testing is streaming a dynamically created svg image.
@@ -338,6 +366,26 @@ class MastisBotClient(discord.Client):
 		users = '\n - '.join([user.name for user in self.users])
 		print(f'Viewable Users:\n - {users}')
 
+	async def on_message_delete(self, message):
+		# Bot doesn't care if it deletes its own message.
+		if message.author == self.user:
+			return
+
+		author_nickname = get_nick(message)
+
+		print("-- Message deleted:")
+		print(f" - author: {author_nickname}({message.author.name})")
+
+		# If the deleted message happen to be one that initiated a bot
+		# reply, we remove the link between it and the reply, thereby the
+		# bot forgets how to edit its reply. We don't delete the bot reply
+		# (at this time).
+		val = self.bot_replies.pop(message.id, None)
+		if val:
+			print(f"%-> Removed message from cache: {message.id} -/-> {val}!")
+	
+	# TODO: Handle bulk message deletes later.
+
 	async def on_message_edit(self, before, after):
 		# Ensure that the bot cannot reply to itself!
 		if before.author == self.user or after.author == self.user:
@@ -400,6 +448,14 @@ class MastisBotClient(discord.Client):
 			rmsg = await self.command_test_cairo(message, arg)
 		elif cmd == "m":
 			rmsg = await self.command_m(message, arg)
+
+		# TODO: It is not possible to edit image attachement in Discord yet. 
+		# So this test code is commented out until it works and I can continue.
+		#elif cmd == "set-target":
+		#	rmsg = await self.command_set_target(message, arg)
+		#elif cmd == "edit-target":
+		#	rmsg = await self.command_edit_target(message, arg)
+
 		#elif cmd == "history":
 		#	response = " - Bot history:\n"
 		#	for initial, reply in self.bot_replies.items():
@@ -413,9 +469,11 @@ class MastisBotClient(discord.Client):
 		# Associate the incoming message with the response so we can edit
 		# it later if the original author which prompted the response 
 		# edits their message.
-		self.bot_replies[message.id] = rmsg.id
-
-		print(f"%-> Added to message cache: {message.id} -> {rmsg.id}")
+		if rmsg:
+			self.bot_replies[message.id] = rmsg.id
+			print(f"%-> Added to message cache: {message.id} -> {rmsg.id}")
+		else:
+			print("%-> No reply to add to cache!")
 
 def main():
 	print("Starting mastis_bot...")
