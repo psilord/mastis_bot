@@ -339,6 +339,10 @@ class MastisBotClient(discord.Client):
 		print(f'Viewable Users:\n - {users}')
 
 	async def on_message_edit(self, before, after):
+		# Ensure that the bot cannot reply to itself!
+		if before.author == self.user or after.author == self.user:
+			return
+
 		# TODO: Keep track of the message ids that contained xlate commands and
 		# the messages I generated in response to it. If the original message
 		# changed, then attempt to edit the message I originally sent in place
