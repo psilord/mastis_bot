@@ -195,148 +195,160 @@ def do_translate(msg):
 
 	return memfs
 
-client = discord.Client()
 
-@client.event
-async def on_ready():
-	print(f"client.user: {client.user} is ready!")
+class MastisBotClient(discord.Client):
+	# Inherited API:
+	# https://discordpy.readthedocs.io/en/latest/api.html#client
 
-	guild = discord.utils.get(client.guilds, name = GUILD_NAME)
-	if not guild:
-		print(" Sorry! no valid guilds found!")
-		return
+	async def on_ready(self):
+		print(f"self.user: {self.user} is ready!")
 
-	print(f"{client.user} is connected to (at least) the guild:\n"
-		f" - {guild.name}")
+		guild = discord.utils.get(self.guilds, name = GUILD_NAME)
+		if not guild:
+			print(" Sorry! no valid guilds found!")
+			return
 
-	# what members can the bot see?
-	members = '\n - '.join([member.name for member in guild.members])
-	print(f'Viewable Guild Members:\n - {members}')
+		print(f"{self.user} is connected to (at least) the guild:\n"
+			f" - {guild.name}")
 
-	# What users can the bot see?
-	users = '\n - '.join([user.name for user in client.users])
-	print(f'Viewable Users:\n - {users}')
+		# what members can the bot see?
+		members = '\n - '.join([member.name for member in guild.members])
+		print(f'Viewable Guild Members:\n - {members}')
 
-# TODO: Keep track of the message ids that contained xlate commands and the
-# messages I generated in response to it. If the original message changed, then
-# attempt to edit the message I originally sent in place with the new 
-# translations.
-@client.event
-async def on_message_edit(before, after):
-	print("-- Message edited:")
-	print(f" Before: ({before.author.display_name}, msg id: {before.id})")
-	print(f"  - {before.content}")
-	print(f" After: ({after.author.display_name}, msg id: {after.id})")
-	print(f"  - {after.content}")
+		# What users can the bot see?
+		users = '\n - '.join([user.name for user in self.users])
+		print(f'Viewable Users:\n - {users}')
 
-@client.event
-async def on_message(message):
-	# Ensure that the bot cannot reply to itself!
-	if message.author == client.user:
-		return
+	async def on_message_edit(self, before, after):
+		# TODO: Keep track of the message ids that contained xlate commands and
+		# the messages I generated in response to it. If the original message
+		# changed, then attempt to edit the message I originally sent in place
+		# with the new translations.
 
-	# TODO: If the user left the guild, this is a User type, not a Member type.
-	# Figure out the consequences of that.
-	author_nickname = message.author.display_name
+		print("-- Message edited:")
+		print(f" Before: ({before.author.display_name}, msg id: {before.id})")
+		print(f"  - {before.content}")
+		print(f" After: ({after.author.display_name}, msg id: {after.id})")
+		print(f"  - {after.content}")
 
-	print(f"-- Observed message (id: {message.id}): \n"
-		f" - guild: {message.guild.name}\n"
-		f" - channel: #{message.channel.name}\n"
-		f" - author: {message.author.display_name}({message.author.name})")
+	async def on_message(self, message):
+		# Ensure that the bot cannot reply to itself!
+		if message.author == self.user:
+			return
 
-	# Ignore if not from the right guild.
-	if message.guild.name != GUILD_NAME:
-		print(f" * Ignoring because not in guild: #{GUILD_NAME}");
-		return
+		# TODO: If the user left the guild, this is a User type, not a Member
+		# type.
+		# Figure out the consequences of that.
+		author_nickname = message.author.display_name
 
-	# Ignore if not from the right channel.
-	if message.channel.name != CHANNEL_NAME:
-		print(f" * Ignoring because not in channel: #{CHANNEL_NAME}");
-		return
+		print(f"-- Observed message (id: {message.id}): \n"
+			f" - guild: {message.guild.name}\n"
+			f" - channel: #{message.channel.name}\n"
+			f" - author: {message.author.display_name}({message.author.name})")
 
-	print(f" - content: '{message.content}'")
+		# Ignore if not from the right guild.
+		if message.guild.name != GUILD_NAME:
+			print(f" * Ignoring because not in guild: #{GUILD_NAME}");
+			return
 
-	# If there is cause to respond, do something.
-	# TODO: Very primitive for now.
+		# Ignore if not from the right channel.
+		if message.channel.name != CHANNEL_NAME:
+			print(f" * Ignoring because not in channel: #{CHANNEL_NAME}");
+			return
 
-	p = re.compile(r'^\s*[.](?P<cmd>\w+(-\w+)*)\s*(?P<arg>.*)$')
-	query = p.search(message.content.lower())
-	if not query:
-		return
+		print(f" - content: '{message.content}'")
 
-	cmd = query.group('cmd')
-	arg = query.group('arg')
-	if arg is not None:
-		arg = arg.strip()
+		# If there is cause to respond, do something.
+		# TODO: Very primitive for now.
+
+		p = re.compile(r'^\s*[.](?P<cmd>\w+(-\w+)*)\s*(?P<arg>.*)$')
+		query = p.search(message.content.lower())
+		if not query:
+			return
+
+		cmd = query.group('cmd')
+		arg = query.group('arg')
+		if arg is not None:
+			arg = arg.strip()
 	
-	if query:
-		print(f" [Sending response]")
+		if query:
+			print(f" [Sending response]")
 
-		if cmd == "help":
-			response = f"**{author_nickname}**:\n" \
-				"A command must start with a period.\n" \
-				"The supported commands so far are:\n" \
-				"**.help**  - This help\n" \
-				"**.aunka** - Today's aunka in Romanized Kílta\n" \
-				"**.date** - Today's date in Romanized Kílta\n" \
-				"**.m Romanized Kílta** - Translate utterance to **Mastis**\n" \
-				"An example command is:\n" \
-				".m Suríli." 
-			print(f"   -|{response.rstrip()}")
-			await message.channel.send(response)
+			if cmd == "help":
+				response = f"**{author_nickname}**:\n" \
+					"A command must start with a period.\n" \
+					"The supported commands so far are:\n" \
+					"**.help**  - This help\n" \
+					"**.aunka** - Today's aunka in Romanized Kílta\n" \
+					"**.date** - Today's date in Romanized Kílta\n" \
+					"**.m Romanized Kílta** - " \
+						"Translate utterance to **Mastis**\n" \
+					"An example command is:\n" \
+					".m Suríli."
+				print(f"   -|{response.rstrip()}")
+				await message.channel.send(response)
 
-		elif cmd == "m":
-			max_len = 2048 # Just a bad hack to prevent overflow problems...
-			truncated_arg = \
-				(arg[:max_len] + '....') if len(arg) > max_len else arg
+			elif cmd == "m":
+				max_len = 2048 # Just a bad hack to prevent overflow problems...
+				truncated_arg = \
+					(arg[:max_len] + '....') if len(arg) > max_len else arg
 
-			kt = ku.KiltaTokenizer()
+				kt = ku.KiltaTokenizer()
 
-			mastis_text = kt.romanized_to_mastis(truncated_arg.strip())
-			dedented = tw.dedent(mastis_text).strip()
-			xlate = tw.fill(dedented, width=40)
-			response = f"**{author_nickname}** wrote:\n"
-			print(f"   -|{response.rstrip()}")
-			print( "   -|[image]")
+				mastis_text = kt.romanized_to_mastis(truncated_arg.strip())
+				dedented = tw.dedent(mastis_text).strip()
+				xlate = tw.fill(dedented, width=40)
+				response = f"**{author_nickname}** wrote:\n"
+				print(f"   -|{response.rstrip()}")
+				print( "   -|[image]")
 
-			# Read the file from the in memory FS and dump it to discord.
-			memfs = do_translate(xlate)
-			with memfs.open('translation.png', 'rb') as fin:
-				await message.channel.send(response, \
-					file=discord.File(fin, 'translation.png'))
-			memfs.close()
+				# Read the file from the in memory FS and dump it to discord.
+				memfs = do_translate(xlate)
+				with memfs.open('translation.png', 'rb') as fin:
+					await message.channel.send(response, \
+						file=discord.File(fin, 'translation.png'))
+				memfs.close()
 
-		elif cmd == "aunka":
-			kaura, olta, aunka, tun = kd.compute_kilta_date()
-			response = f"**{author_nickname}**: Today's aunka is **{aunka}**."
-			print(f"   -|{response.rstrip()}")
-			await message.channel.send(response)
+			elif cmd == "aunka":
+				kaura, olta, aunka, tun = kd.compute_kilta_date()
+				response = \
+					f"**{author_nickname}**: Today's aunka is **{aunka}**."
+				print(f"   -|{response.rstrip()}")
+				await message.channel.send(response)
 
-		elif cmd == "date":
-			kaura, olta, aunka, tun = kd.compute_kilta_date()
-			kilta_date = f"{kaura} {olta} {aunka} {tun}"
-			response = f"**{author_nickname}**: Today's date is **{kilta_date}**."
-			print(f"   -|{response.rstrip()}")
-			await message.channel.send(response)
+			elif cmd == "date":
+				kaura, olta, aunka, tun = kd.compute_kilta_date()
+				kilta_date = f"{kaura} {olta} {aunka} {tun}"
+				response = \
+					f"**{author_nickname}**: Today's date is **{kilta_date}**."
+				print(f"   -|{response.rstrip()}")
+				await message.channel.send(response)
 
-		elif cmd == "test-cairo":
-			response = f"{author_nickname}: Ok!"
-			print(f"   -|{response.rstrip()}")
-			print( "   -|[image]")
-			# Read the file from the in memory FS and dump it to discord.
-			memfs = do_cairo()
-			with memfs.open('translation.png', 'rb') as fin:
-				await message.channel.send(response, \
-					file=discord.File(fin, 'translation.png'))
-			memfs.close()
+			elif cmd == "test-cairo":
+				response = f"{author_nickname}: Ok!"
+				print(f"   -|{response.rstrip()}")
+				print( "   -|[image]")
+				# Read the file from the in memory FS and dump it to discord.
+				memfs = do_cairo()
+				with memfs.open('translation.png', 'rb') as fin:
+					await message.channel.send(response, \
+						file=discord.File(fin, 'translation.png'))
+				memfs.close()
 
-		else:
-			response = f"{author_nickname}: I don't understand the request: " \
-						f"'.{cmd}'"
-			print(f"   -|{response}")
-			await message.channel.send(response)
+			else:
+				response = \
+					f"{author_nickname}: I don't understand the request: " \
+							f"'.{cmd}'"
+				print(f"   -|{response}")
+				await message.channel.send(response)
 
-client.run(TOKEN)
+def main():
+	print("Starting mastis_bot...")
+	client = MastisBotClient()
+	client.run(TOKEN)
+
+if __name__ == '__main__':
+	main()
 
 
 
