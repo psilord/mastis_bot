@@ -383,6 +383,13 @@ class MastisBotClient(discord.Client):
 			rmsg = await self.command_test_cairo(message, arg)
 		elif cmd == "m":
 			rmsg = await self.command_m(message, arg)
+		#elif cmd == "history":
+		#	response = " - Bot history:\n"
+		#	for initial, reply in self.bot_replies.items():
+		#		response += f"   - Initial: {initial} -> reply: {reply}\n"
+		#	response += "Done."
+		#	print(response)
+		#	rmsg = await message.channel.send(response)
 		else:
 			rmsg = await self.command_unknown(message, cmd, arg)
 
