@@ -205,6 +205,13 @@ class MastisBotClient(discord.Client):
 	# https://discordpy.readthedocs.io/en/latest/api.html#client
 
 	# ###################################################################
+	# Instance Variables
+	# ###################################################################
+	# Key: A user message id, Value: the message id mastis_bot created
+	# for the response.
+	bot_replies = {}
+
+	# ###################################################################
 	# mastis_bot Command Handlers
 	# ###################################################################
 	async def command_help(self, message, arg):
@@ -222,6 +229,7 @@ class MastisBotClient(discord.Client):
 		print(f"   -|{response.rstrip()}")
 		rmsg = await message.channel.send(response)
 		print(f"   - Response message id: {rmsg.id}")
+		return rmsg
 
 	async def command_aunka(self, message, arg):
 		print(f" [Sending response]")
@@ -231,6 +239,7 @@ class MastisBotClient(discord.Client):
 		print(f"   -|{response.rstrip()}")
 		rmsg = await message.channel.send(response)
 		print(f"   - Response message id: {rmsg.id}")
+		return rmsg
 
 	async def command_date(self, message, arg):
 		print(f" [Sending response]")
@@ -241,6 +250,7 @@ class MastisBotClient(discord.Client):
 		print(f"   -|{response.rstrip()}")
 		rmsg = await message.channel.send(response)
 		print(f"   - Response message id: {rmsg.id}")
+		return rmsg
 
 	async def command_test_cairo(self, message, arg):
 		# Testing is streaming a dynamically created svg image.
@@ -256,6 +266,7 @@ class MastisBotClient(discord.Client):
 				file=discord.File(fin, 'translation.png'))
 		memfs.close()
 		print(f"   - Response message id: {rmsg.id}")
+		return rmsg
 
 	async def command_m(self, message, arg):
 		print(f" [Sending response]")
@@ -279,6 +290,7 @@ class MastisBotClient(discord.Client):
 				file=discord.File(fin, 'translation.png'))
 		memfs.close()
 		print(f"   - Response message id: {rmsg.id}")
+		return rmsg
 
 	async def command_unknown(self, message, cmd, arg):
 		print(f" [Sending response]")
@@ -288,6 +300,7 @@ class MastisBotClient(discord.Client):
 		print(f"   -|{response}")
 		rmsg = await message.channel.send(response)
 		print(f"   - Response message id: {rmsg.id}")
+		return rmsg
 
 	# ###################################################################
 	# Discord Client Interface
@@ -361,17 +374,24 @@ class MastisBotClient(discord.Client):
 			return
 
 		if cmd == "help":
-			await self.command_help(message, arg)
+			rmsg = await self.command_help(message, arg)
 		elif cmd == "aunka":
-			await self.command_aunka(message, arg)
+			rmsg = await self.command_aunka(message, arg)
 		elif cmd == "date":
-			await self.command_date(message, arg)
+			rmsg = await self.command_date(message, arg)
 		elif cmd == "test-cairo":
-			await self.command_test_cairo(message, arg)
+			rmsg = await self.command_test_cairo(message, arg)
 		elif cmd == "m":
-			await self.command_m(message, arg)
+			rmsg = await self.command_m(message, arg)
 		else:
-			await self.command_unknown(message, cmd, arg)
+			rmsg = await self.command_unknown(message, cmd, arg)
+
+		# Associate the incoming message with the response so we can edit
+		# it later if the original author which prompted the response 
+		# edits their message.
+		self.bot_replies[message.id] = rmsg.id
+
+		print(f"%-> Added to message cache: {message.id} -> {rmsg.id}")
 
 def main():
 	print("Starting mastis_bot...")
