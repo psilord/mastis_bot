@@ -212,6 +212,23 @@ class MastisBotClient(discord.Client):
 	bot_replies = {}
 
 	# ###################################################################
+	# Utility Functions
+	# ###################################################################
+
+	async def send_or_edit_response(self, initiating_message, response, \
+										attachment):
+		if attachment:
+			memfs, filename, dfilename = attachment
+			with memfs.open(filename, 'rb') as fin:
+				rmsg = await initiating_message.channel.send(response, \
+					file=discord.File(fin, dfilename))
+			memfs.close()
+			return rmsg
+
+		rmsg = await initiating_message.channel.send(response)
+		return rmsg
+
+	# ###################################################################
 	# mastis_bot Command Handlers
 	# ###################################################################
 	async def command_help(self, message, arg):
@@ -227,7 +244,7 @@ class MastisBotClient(discord.Client):
 			"An example command is:\n" \
 			".m Suríli."
 		print(f"   -|{response.rstrip()}")
-		rmsg = await message.channel.send(response)
+		rmsg = await self.send_or_edit_response(message, response, None)
 		print(f"   - Response message id: {rmsg.id}")
 		return rmsg
 
@@ -237,7 +254,7 @@ class MastisBotClient(discord.Client):
 		kaura, olta, aunka, tun = kd.compute_kilta_date()
 		response = f"**{author_nickname}**: Today's aunka is **{aunka}**."
 		print(f"   -|{response.rstrip()}")
-		rmsg = await message.channel.send(response)
+		rmsg = await self.send_or_edit_response(message, response, None)
 		print(f"   - Response message id: {rmsg.id}")
 		return rmsg
 
@@ -248,7 +265,7 @@ class MastisBotClient(discord.Client):
 		kilta_date = f"{kaura} {olta} {aunka} {tun}"
 		response = f"**{author_nickname}**: Today's date is **{kilta_date}**."
 		print(f"   -|{response.rstrip()}")
-		rmsg = await message.channel.send(response)
+		rmsg = await self.send_or_edit_response(message, response, None)
 		print(f"   - Response message id: {rmsg.id}")
 		return rmsg
 
@@ -261,10 +278,8 @@ class MastisBotClient(discord.Client):
 		print( "   -|[image]")
 		# Read the file from the in memory FS and dump it to discord.
 		memfs = do_cairo()
-		with memfs.open('translation.png', 'rb') as fin:
-			rmsg = await message.channel.send(response, \
-				file=discord.File(fin, 'translation.png'))
-		memfs.close()
+		rmsg = await self.send_or_edit_response(message, response, \
+			(memfs, 'translation.png', 'translation.png'))
 		print(f"   - Response message id: {rmsg.id}")
 		return rmsg
 
@@ -285,10 +300,8 @@ class MastisBotClient(discord.Client):
 
 		# Read the file from the in memory FS and dump it to discord.
 		memfs = do_translate(xlate)
-		with memfs.open('translation.png', 'rb') as fin:
-			rmsg = await message.channel.send(response, \
-				file=discord.File(fin, 'translation.png'))
-		memfs.close()
+		rmsg = await self.send_or_edit_response(message, response, \
+			(memfs, 'translation.png', 'translation.png'))
 		print(f"   - Response message id: {rmsg.id}")
 		return rmsg
 
@@ -298,7 +311,7 @@ class MastisBotClient(discord.Client):
 		response = f"{author_nickname}: I don't understand the request: " \
 					f"'.{cmd}'"
 		print(f"   -|{response}")
-		rmsg = await message.channel.send(response)
+		rmsg = await self.send_or_edit_response(message, response, None)
 		print(f"   - Response message id: {rmsg.id}")
 		return rmsg
 
