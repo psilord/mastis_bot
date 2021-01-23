@@ -195,10 +195,103 @@ def do_translate(msg):
 
 	return memfs
 
+def get_nick(message):
+	# TODO: If the user left the guild, this is a User type, not a Member
+	# type. Figure out the consequences of that.
+	return message.author.display_name
 
 class MastisBotClient(discord.Client):
 	# Inherited API:
 	# https://discordpy.readthedocs.io/en/latest/api.html#client
+
+	# ###################################################################
+	# mastis_bot Command Handlers
+	# ###################################################################
+	async def command_help(self, message, arg):
+		author_nickname = get_nick(message)
+		response = f"**{author_nickname}**:\n" \
+			"A command must start with a period.\n" \
+			"The supported commands are:\n" \
+			"**.help**  - This help\n" \
+			"**.aunka** - Today's aunka in Romanized Kílta\n" \
+			"**.date** - Today's date in Romanized Kílta\n" \
+			"**.m Romanized Kílta** - " \
+				"Translate utterance to **Mastis**\n" \
+			"An example command is:\n" \
+			".m Suríli."
+		print(f"   -|{response.rstrip()}")
+		rmsg = await message.channel.send(response)
+		print(f"   - Response message id: {rmsg.id}")
+
+	async def command_aunka(self, message, arg):
+		print(f" [Sending response]")
+		author_nickname = get_nick(message)
+		kaura, olta, aunka, tun = kd.compute_kilta_date()
+		response = f"**{author_nickname}**: Today's aunka is **{aunka}**."
+		print(f"   -|{response.rstrip()}")
+		rmsg = await message.channel.send(response)
+		print(f"   - Response message id: {rmsg.id}")
+
+	async def command_date(self, message, arg):
+		print(f" [Sending response]")
+		author_nickname = get_nick(message)
+		kaura, olta, aunka, tun = kd.compute_kilta_date()
+		kilta_date = f"{kaura} {olta} {aunka} {tun}"
+		response = f"**{author_nickname}**: Today's date is **{kilta_date}**."
+		print(f"   -|{response.rstrip()}")
+		rmsg = await message.channel.send(response)
+		print(f"   - Response message id: {rmsg.id}")
+
+	async def command_test_cairo(self, message, arg):
+		# Testing is streaming a dynamically created svg image.
+		print(f" [Sending response]")
+		author_nickname = get_nick(message)
+		response = f"{author_nickname}: Ok!"
+		print(f"   -|{response.rstrip()}")
+		print( "   -|[image]")
+		# Read the file from the in memory FS and dump it to discord.
+		memfs = do_cairo()
+		with memfs.open('translation.png', 'rb') as fin:
+			rmsg = await message.channel.send(response, \
+				file=discord.File(fin, 'translation.png'))
+		memfs.close()
+		print(f"   - Response message id: {rmsg.id}")
+
+	async def command_m(self, message, arg):
+		print(f" [Sending response]")
+		author_nickname = get_nick(message)
+		max_len = 2048 # Just a bad hack to prevent overflow problems...
+		truncated_arg = (arg[:max_len] + '....') if len(arg) > max_len else arg
+
+		kt = ku.KiltaTokenizer()
+
+		mastis_text = kt.romanized_to_mastis(truncated_arg.strip())
+		dedented = tw.dedent(mastis_text).strip()
+		xlate = tw.fill(dedented, width=40)
+		response = f"**{author_nickname}** wrote:\n"
+		print(f"   -|{response.rstrip()}")
+		print( "   -|[image]")
+
+		# Read the file from the in memory FS and dump it to discord.
+		memfs = do_translate(xlate)
+		with memfs.open('translation.png', 'rb') as fin:
+			rmsg = await message.channel.send(response, \
+				file=discord.File(fin, 'translation.png'))
+		memfs.close()
+		print(f"   - Response message id: {rmsg.id}")
+
+	async def command_unknown(self, message, cmd, arg):
+		print(f" [Sending response]")
+		author_nickname = get_nick(message)
+		response = f"{author_nickname}: I don't understand the request: " \
+					f"'.{cmd}'"
+		print(f"   -|{response}")
+		rmsg = await message.channel.send(response)
+		print(f"   - Response message id: {rmsg.id}")
+
+	# ###################################################################
+	# Discord Client Interface
+	# ###################################################################
 
 	async def on_ready(self):
 		print(f"self.user: {self.user} is ready!")
@@ -236,11 +329,6 @@ class MastisBotClient(discord.Client):
 		if message.author == self.user:
 			return
 
-		# TODO: If the user left the guild, this is a User type, not a Member
-		# type.
-		# Figure out the consequences of that.
-		author_nickname = message.author.display_name
-
 		print(f"-- Observed message (id: {message.id}): \n"
 			f" - guild: {message.guild.name}\n"
 			f" - channel: #{message.channel.name}\n"
@@ -258,9 +346,7 @@ class MastisBotClient(discord.Client):
 
 		print(f" - content: '{message.content}'")
 
-		# If there is cause to respond, do something.
-		# TODO: Very primitive for now.
-
+		# See if the message is a command to the bot...
 		p = re.compile(r'^\s*[.](?P<cmd>\w+(-\w+)*)\s*(?P<arg>.*)$')
 		query = p.search(message.content.lower())
 		if not query:
@@ -271,76 +357,21 @@ class MastisBotClient(discord.Client):
 		if arg is not None:
 			arg = arg.strip()
 	
-		if query:
-			print(f" [Sending response]")
+		if not query:
+			return
 
-			if cmd == "help":
-				response = f"**{author_nickname}**:\n" \
-					"A command must start with a period.\n" \
-					"The supported commands so far are:\n" \
-					"**.help**  - This help\n" \
-					"**.aunka** - Today's aunka in Romanized Kílta\n" \
-					"**.date** - Today's date in Romanized Kílta\n" \
-					"**.m Romanized Kílta** - " \
-						"Translate utterance to **Mastis**\n" \
-					"An example command is:\n" \
-					".m Suríli."
-				print(f"   -|{response.rstrip()}")
-				await message.channel.send(response)
-
-			elif cmd == "m":
-				max_len = 2048 # Just a bad hack to prevent overflow problems...
-				truncated_arg = \
-					(arg[:max_len] + '....') if len(arg) > max_len else arg
-
-				kt = ku.KiltaTokenizer()
-
-				mastis_text = kt.romanized_to_mastis(truncated_arg.strip())
-				dedented = tw.dedent(mastis_text).strip()
-				xlate = tw.fill(dedented, width=40)
-				response = f"**{author_nickname}** wrote:\n"
-				print(f"   -|{response.rstrip()}")
-				print( "   -|[image]")
-
-				# Read the file from the in memory FS and dump it to discord.
-				memfs = do_translate(xlate)
-				with memfs.open('translation.png', 'rb') as fin:
-					await message.channel.send(response, \
-						file=discord.File(fin, 'translation.png'))
-				memfs.close()
-
-			elif cmd == "aunka":
-				kaura, olta, aunka, tun = kd.compute_kilta_date()
-				response = \
-					f"**{author_nickname}**: Today's aunka is **{aunka}**."
-				print(f"   -|{response.rstrip()}")
-				await message.channel.send(response)
-
-			elif cmd == "date":
-				kaura, olta, aunka, tun = kd.compute_kilta_date()
-				kilta_date = f"{kaura} {olta} {aunka} {tun}"
-				response = \
-					f"**{author_nickname}**: Today's date is **{kilta_date}**."
-				print(f"   -|{response.rstrip()}")
-				await message.channel.send(response)
-
-			elif cmd == "test-cairo":
-				response = f"{author_nickname}: Ok!"
-				print(f"   -|{response.rstrip()}")
-				print( "   -|[image]")
-				# Read the file from the in memory FS and dump it to discord.
-				memfs = do_cairo()
-				with memfs.open('translation.png', 'rb') as fin:
-					await message.channel.send(response, \
-						file=discord.File(fin, 'translation.png'))
-				memfs.close()
-
-			else:
-				response = \
-					f"{author_nickname}: I don't understand the request: " \
-							f"'.{cmd}'"
-				print(f"   -|{response}")
-				await message.channel.send(response)
+		if cmd == "help":
+			await self.command_help(message, arg)
+		elif cmd == "aunka":
+			await self.command_aunka(message, arg)
+		elif cmd == "date":
+			await self.command_date(message, arg)
+		elif cmd == "test-cairo":
+			await self.command_test_cairo(message, arg)
+		elif cmd == "m":
+			await self.command_m(message, arg)
+		else:
+			await self.command_unknown(message, cmd, arg)
 
 def main():
 	print("Starting mastis_bot...")
