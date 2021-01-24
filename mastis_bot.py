@@ -32,6 +32,7 @@ from fs.memoryfs import MemoryFS
 import font_helper as fh
 import kilta_utils as ku
 import kilta_date as kd
+import kilta_font as kf
 import datetime as dt
 
 load_dotenv()
@@ -42,7 +43,6 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_NAME = os.getenv("DISCORD_GUILD_NAME")
 CHANNEL_NAME = os.getenv("DISCORD_CHANNEL_NAME")
 MASTIS_FONT = os.path.abspath(os.getenv("MASTIS_FONT"))
-MASTIS_FONT_FACE = fh.create_cairo_font_face_for_file(MASTIS_FONT, 0)
 
 
 def do_cairo():
@@ -86,8 +86,11 @@ def do_cairo():
 
 	return memfs
 
+def do_layout_test(self):
+	pass
+
 # This is horrible. Sorry.
-def do_translate(msg):
+def do_translate(self, msg):
 	# fixed width assumption, or at least maximum constraint
 	font_size = 30
 	font_vertical_padding = 3
@@ -112,7 +115,7 @@ def do_translate(msg):
 
 	#ctx.select_font_face("DejaVu Sans Mono", cairo.FONT_SLANT_NORMAL, \
 	#	cairo.FONT_WEIGHT_NORMAL)
-	ctx.set_font_face(MASTIS_FONT_FACE)
+	ctx.set_font_face(self.kilta_font.get_cairo_font_face())
 	ctx.set_font_size(font_size)
 	# font_extents is (ascent, descent, height, max_x_advance, max_y_advance)
 	font_extents = ctx.font_extents()
@@ -163,7 +166,7 @@ def do_translate(msg):
 	# ############################
 	#ctx.select_font_face("DejaVu Sans Mono", cairo.FONT_SLANT_NORMAL, \
 	#	cairo.FONT_WEIGHT_NORMAL)
-	ctx.set_font_face(MASTIS_FONT_FACE)
+	ctx.set_font_face(self.kilta_font.get_cairo_font_face())
 	ctx.set_font_size(font_size)
 	ctx.set_source_rgba(0, 0, 0, 1) # foreground font color: black
 
@@ -205,7 +208,7 @@ class MastisBotClient(discord.Client):
 	# https://discordpy.readthedocs.io/en/latest/api.html#client
 
 	# ###################################################################
-	# Instance Variables
+	# Class Attributes
 	# ###################################################################
 	# Key: A user message id, Value: the message id mastis_bot created
 	# for the response.
@@ -217,9 +220,21 @@ class MastisBotClient(discord.Client):
 	target_message_id = None
 
 	# ###################################################################
+	# Constructor
+	# ###################################################################
+	def __init__(self, font_path):
+		discord.Client.__init__(self)
+		# Herein we set up the ability to get a cairo font face and
+		# how to layout the KiltaFont with kerning, etc.
+		self.kilta_font = kf.KiltaFont(font_path)
+
+	# ###################################################################
 	# Utility Functions
 	# ###################################################################
 
+	# NOTE: This function is on hold for now. Discord doesn't yet allow
+	# editing of attached images which is the primary reason for this
+	# function's existence.
 	async def send_or_edit_response(self, initiating_message, response, \
 										attachment):
 		if attachment:
@@ -327,7 +342,7 @@ class MastisBotClient(discord.Client):
 		print( "   -|[image]")
 
 		# Read the file from the in memory FS and dump it to discord.
-		memfs = do_translate(xlate)
+		memfs = do_translate(self, xlate)
 		rmsg = await self.send_or_edit_response(message, response, \
 			(memfs, 'translation.png', 'translation.png'))
 		print(f"   - Response message id: {rmsg.id}")
@@ -477,7 +492,7 @@ class MastisBotClient(discord.Client):
 
 def main():
 	print("Starting mastis_bot...")
-	client = MastisBotClient()
+	client = MastisBotClient(MASTIS_FONT)
 	client.run(TOKEN)
 
 if __name__ == '__main__':

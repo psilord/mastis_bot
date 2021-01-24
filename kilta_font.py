@@ -1,33 +1,84 @@
-# A program to test getting kerning  info out of a TTF
+# Code to perform Pango-like font cairo interactions and font 
+# layout with the Kílta Font.
 
 import os
+import font_helper as fh
 from fontTools import ttLib
 
-# debugging for when I get some object out of the freetype API that 
-# isn't documented.
-def get_methods(obj):
-	object_methods = [method_name for method_name in dir(obj)
-						if callable(getattr(obj, method_name))]
-	return object_methods
+class KiltaFont():
+	def __init__(self, font_path):
+		self.font_path = os.path.abspath(font_path)
 
-def get_attributes(obj):
-	return dir(obj)
+		# Load and create a Cairo Font Face object that suitable for 
+		# cairo's font processing.
+		self.cairo_font_face = \
+			fh.create_cairo_font_face_for_file(self.font_path, 0)
 
-def introspect(msg, obj):
-	try:
-		print(f"{msg} attributes: {get_attributes(obj)}")
-	except:
-		print(f"{msg} attributes: Not iterable. Sorry.")
-		os.exit(1)
+		# Create a _different_ font object with a different API 
+		# suitable for kerning processing. It sucks we need to use two 
+		# different APIs
+		self.tt = ttLib.TTFont(self.font_path)
+		# map from character ordinal to glyph name
+		self.cmap = self.tt.getBestCmap()
+		# map from tuple left/right glyph names to x kerning offset.
+		self.kern_table = self.tt['kern'].getkern(0).kernTable
+		# map from glyph_name to glyph_index in font
+		self.gmap = self.tt.getReverseGlyphMap()
 
-	try:
-		print(f"{msg} methods: {get_methods(obj)}")
-	except:
-		print(f"{msg} methods: Not iterable. Sorry.")
-		os.exit(1)
+	def get_cairo_font_face(self):
+		return self.cairo_font_face
+	
+	# NOTE: This function expects the mastis encoding.
+	def get_kerning_for_pair(self, left_char, right_char):
+		left_ord = ord(left_char)
+		left_glyph_name = self.cmap.get(left_ord)
+		if left_glyph_name is None:
+			return 0
+
+		right_ord = ord(right_char)
+		right_glyph_name = self.cmap.get(right_ord)
+		if right_glyph_name is None:
+			return 0
+
+		kern_val = self.kern_table.get((left_glyph_name, right_glyph_name))
+		if kern_val is None:
+			return 0
+
+		return kern_val
+	
+	# Convert a mastis character to a glyph index (suitable for cairo)
+	def get_glyph_index(self, mchar):
+		mord = ord(mchar)
+		mglyph_name = self.cmap.get(mord)
+		return self.gmap.get(mglyph_name)
+		
+	# Given a single line of mastis characters, lay it out in accordance with
+	# kerning rules against an origin of (0,0) using the size of the characters
+	# in the font itself.
+	def layout_line(self, mastis):
+		# First, cut the mastis line into kerning pairs in the order of the
+		# utterance.
+		kpairs = []
+		for i in range(len(mastis)):
+			if (i+1 < len(mastis)):
+				kpairs.append((mastis[i], mastis[i+1]))
+			else:
+				kpairs.append((mastis[i], None))
+
+		# Then, assemble a [[char, kern_off], .....] list that is
+		# in the order of the original mastis line.
+		klets = \
+			map(lambda kp : [k[0], self.get_kerning_for_pair(kp[0], kp[1])], \
+				kpairs)
+
+		# TODO: Keep going in transformations until I get to a list of
+		# glyph indexes with x,y positions for where to put them.
 
 
-def main():
+
+
+# Useful standalone demonstration code for getting stuff out of ttLib.
+def debugging():
 	tt = ttLib.TTFont(os.path.abspath("./KiThree.ttf"))
 	print("Loaded ./KiThree.ttf")
 
@@ -65,6 +116,17 @@ def main():
 		kern_val = kern_table[pair]
 		print(f"kerning: '{left}':'{right}' = {kern_val}")
 
+def main():
+	debugging()
+	return
+
+	#kf = KiltaFont("./KiThree.ttf")
+	#print(f"Cairo Font Face Object: {kf.get_cairo_font_face()}")
+	#print(f"Kerning between'k' and 'i': {kf.get_kerning_for_pair('k', 'i')}")
+
 if __name__ == '__main__':
 	main()
+
+
+
 
