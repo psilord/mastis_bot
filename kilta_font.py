@@ -82,6 +82,8 @@ def debugging():
 	tt = ttLib.TTFont(os.path.abspath("./KiThree.ttf"))
 	print("Loaded ./KiThree.ttf")
 
+	print(f"Units Per Em: {tt['head'].unitsPerEm}")
+
 	# ######################
 	# Glyph chicanery
 	# ######################
