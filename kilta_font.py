@@ -95,6 +95,11 @@ def debugging():
 	glyph_map = tt.getReverseGlyphMap()
 	print(f"Glyph Reverse Map: {glyph_map}")
 
+	glyph_set = dict(tt.getGlyphSet())
+	print(f"Glyph Set: {glyph_set}")
+	for glyf in glyph_set.keys():
+		print(f"glyf: {glyf} -> {glyph_set.get(glyf).width}")
+
 	# ######################
 	# Get character code to glyph name map
 	# ######################
