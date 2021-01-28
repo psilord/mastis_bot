@@ -98,7 +98,10 @@ def debugging():
 	glyph_set = dict(tt.getGlyphSet())
 	print(f"Glyph Set: {glyph_set}")
 	for glyf in glyph_set.keys():
-		print(f"glyf: {glyf} -> {glyph_set.get(glyf).width}")
+		width = glyph_set.get(glyf).width
+		# Height can often be None.
+		height = glyph_set.get(glyf).height
+		print(f"glyf: {glyf} -> width: {width}, height: {height}")
 
 	# ######################
 	# Get character code to glyph name map
