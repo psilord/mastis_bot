@@ -443,6 +443,7 @@ class MastisBotClient(discord.Client):
 		p = re.compile(r'^\s*[.](?P<cmd>\w+(-\w+)*)\s*(?P<arg>.*)$')
 		query = p.search(message.content.lower())
 		if not query:
+			print(" [No query detected. Doing nothing!]")
 			return
 
 		cmd = query.group('cmd')
