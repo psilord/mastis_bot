@@ -125,7 +125,10 @@ def do_translate(self, msg):
 	# safety.
 	for line in lines:
 		ctx.move_to(0, HEIGHT / 2)
-		line_extents.append([line, ctx.text_extents(line)])
+		glyph_line = self.kilta_font.layout_line(ctx, line, font_size)
+		# Note I still store the old 'line' here too. I'll need it later
+		# when doing the pen position.
+		line_extents.append([line, ctx.glyph_extents(glyph_line)])
 
 	# Clean up cause we're dumping this surface and context now!
 	del ctx
@@ -180,7 +183,10 @@ def do_translate(self, msg):
 		extent = line_extent[1]
 		dy += font_size # math.ceil(extent.height) + y_bearing... etc etc
 		ctx.move_to(dx, dy)
-		ctx.show_text(line)
+		# NOTE: ctx knows the current pen position which is why I need to
+		# re-layout the line right here again.
+		glyph_line = self.kilta_font.layout_line(ctx, line, font_size)
+		ctx.show_glyphs(glyph_line) # Already glyphs
 		dy += font_vertical_padding
 
 	ctx.stroke()
