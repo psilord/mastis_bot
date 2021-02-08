@@ -212,15 +212,20 @@ def kern_test():
 	ctx.set_source_rgba(0.0, 0.0, 0.0, 1.0) # black
 	ctx.move_to(0, HEIGHT / 2.0 - FONT_SIZE - font_extents[1]) # descender
 	ctx.show_text(mastis_text)
+	line_extent = ctx.text_extents(mastis_text)
+	print(f"Unkerned Glyph extents: {line_extent}")
 
 	# Draw kerned text
 	ctx.move_to(0, HEIGHT / 2.0)
 	mastis_glyphs = kf.layout_line(ctx, mastis_text, FONT_SIZE)
 	ctx.show_glyphs(mastis_glyphs)
+	line_extent = ctx.glyph_extents(mastis_glyphs)
+	print(f"Kerned Glyph extents: {line_extent}")
 
 	del ctx
 	surface.write_to_png("hello.png")
 	del surface
+	print("Wrote image to hello.png")
 
 def main():
 	#debugging()
