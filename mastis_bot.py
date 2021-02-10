@@ -342,6 +342,11 @@ class MastisBotClient(discord.Client):
 
 		mastis_text = kt.romanized_to_mastis(truncated_arg.strip())
 		dedented = tw.dedent(mastis_text).strip()
+		# NOTE: It turns out discord will use HTML tags to shrink larger
+		# images (like say of text with mnore columns). So, we keep this at
+		# 40 columns in order to keep the width generally ok for the image
+		# and hopefully there isn't too much shrinking based on height.
+		# I haven't run into any yet, but I'm sure we will at some point.
 		xlate = tw.fill(dedented, width=40)
 		response = f"**{author_nickname}** wrote:\n"
 		print(f"   -|{response.rstrip()}")
