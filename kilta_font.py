@@ -24,8 +24,8 @@ class KiltaFont():
 		# different APIs
 		self.tt = ttLib.TTFont(self.font_path)
 		
-		# Store units per Em
-		self.units_per_em = self.tt['head'].unitsPerEm
+		# Store units per Em (ensure to use a float!)
+		self.units_per_em = float(self.tt['head'].unitsPerEm)
 
 		# map from character ordinal to glyph name
 		self.cmap = self.tt.getBestCmap()
@@ -99,7 +99,8 @@ class KiltaFont():
 		glayout = []
 		dx_ems = 0
 		dy_ems = 0
-		dpi_scale = dpi / 72 # NOTE: Validate this equation
+		dpi_scale = dpi / 72.0 # NOTE: Validate this equation
+		font_scale = font_size * dpi_scale
 		x_pen, y_pen = ctx.get_current_point()
 		for pair in kpairs:
 			if (pair[1] is not None):
@@ -111,18 +112,22 @@ class KiltaFont():
 			current_glyph_name = self.get_glyph_name(pair[0])
 			current_glyph_width_ems = self.get_glyph_width(current_glyph_name)
 
-			# print(f"current_glyph[{pair[0]}] width: {current_glyph_width_ems}, kerning: {pair[0]}:{pair[1]}/{kern_val_ems}, dx_ems: {dx_ems}, dy_ems: {dy_ems}")
+			#print(f"current_glyph[{pair[0]}] width: {current_glyph_width_ems}, kerning: {pair[0]}:{pair[1]}/{kern_val_ems}, dx_ems: {dx_ems}, dy_ems: {dy_ems}")
 
 			# convert from em space to pixel space relative to the pen location.
-			x_px = ((dx_ems / self.units_per_em) * font_size) * dpi_scale
-			y_px = ((dy_ems / self.units_per_em) * font_size) * dpi_scale
-			glayout.append([current_glyph_index, x_px + x_pen, y_px + y_pen])
+			# Note: specifically written this way to minimize floating error.
+			x_px = (dx_ems * font_scale) / self.units_per_em
+			y_px = (dy_ems * font_scale) / self.units_per_em
+			#print(f" '{pair[0]}': x_px: {x_px} y_px: {y_px}")
+			glyph = cairo.Glyph(current_glyph_index, x_pen + x_px, y_pen + y_px)
+			#print(f" glyph: {glyph}")
+			glayout.append(glyph)
 
 			# Now, figure out the advance and subtract the kerning for the
 			# placement of the next glyph in em space. NOTE: that kerning
 			# values are positive or negative as appropriate, so we simply
 			# add it all together.
-			dx_ems = dx_ems + current_glyph_width_ems + kern_val_ems
+			dx_ems += current_glyph_width_ems + kern_val_ems
 			# We don't handle vertical scripts, so ignore dy_ems.
 			dy_ems = 0
 
@@ -185,10 +190,12 @@ def debugging():
 # A standalone function to test the kerning and visualize it under to 
 # unkerned text. Top line is unkerned, bottom line is kerned.
 def kern_test():
-	WIDTH = 400
+	WIDTH = 475
 	HEIGHT = 128
 	FONT_SIZE = 30
-	kilta_text = "kílta vë mastis në ha kichat harno."
+	kilta_text = "Këkketë rin in tuirachún nútokolsa li"
+	kilta_text = "rin rin rin rin rin rin rin rin rin"
+	kilta_text = "rin rin rin"
 	
 	kt = ku.KiltaTokenizer()
 	mastis_text = kt.romanized_to_mastis(kilta_text.strip())
