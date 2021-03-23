@@ -33,7 +33,7 @@ class KiltaTokenizer:
 		'UI'			: ['u', 'i'],
 		'UI_ALT'		: ['u', 'j'],
 
-		# Consonants
+		# Regular vowels
 		'SHORT_I'		: ['i'],
 		'LONG_I'		: ['í'],
 		'SHORT_U'		: ['u'],
@@ -45,6 +45,8 @@ class KiltaTokenizer:
 		'MID_E'			: ['ë'],
 		'SHORT_A'		: ['a'],
 		'LONG_A'		: ['á'],
+
+		# Consonants
 		'PP'			: ['P'],
 		'P'				: ['p'],
 		'V'				: ['v'],
