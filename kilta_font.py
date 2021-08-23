@@ -5,6 +5,7 @@ import os
 import font_helper as fh
 import kilta_utils as ku
 from fontTools import ttLib
+import math
 
 # debugging
 import python_object_stuff as pos
@@ -75,7 +76,12 @@ class KiltaFont():
 	
 	# TODO: It is so hard to get correct glyph extent data from ttLib. WTF.
 	def get_glyph_width(self, glyph_name):
-		return self.glyph_set.get(glyph_name).width
+		g = self.glyph_set.get(glyph_name)
+		return g.width
+
+	def get_glyph_lsb(self, glyph_name):
+		g = self.glyph_set.get(glyph_name)
+		return g.lsb
 		
 	# Given a single line of mastis characters, lay it out in accordance with
 	# kerning rules against an origin of (0,0) using the size of the characters
@@ -108,11 +114,13 @@ class KiltaFont():
 			else:
 				kern_val_ems = 0
 
+			kern_val_ems = 0
+
 			current_glyph_index = self.get_glyph_index(pair[0])
 			current_glyph_name = self.get_glyph_name(pair[0])
 			current_glyph_width_ems = self.get_glyph_width(current_glyph_name)
 
-			#print(f"current_glyph[{pair[0]}] width: {current_glyph_width_ems}, kerning: {pair[0]}:{pair[1]}/{kern_val_ems}, dx_ems: {dx_ems}, dy_ems: {dy_ems}")
+			#print(f"cglyph[{pair[0]}] width: {current_glyph_width_ems}, kerning: {pair[0]}:{pair[1]}/{kern_val_ems}, dx_ems: {dx_ems}, dy_ems: {dy_ems}, kvems: {kern_val_ems}")
 
 			# convert from em space to pixel space relative to the pen location.
 			# Note: specifically written this way to minimize floating error.
@@ -153,6 +161,9 @@ def debugging():
 	glyph_ids = list(map(lambda x : tt.getGlyphID(x), glyph_names))
 	print(f"Glyph IDs: {glyph_ids}")
 
+	# ######################
+	# Dump out glyph name to glyph ID.
+	# ######################
 	glyph_map = tt.getReverseGlyphMap()
 	print(f"Glyph Reverse Map: {glyph_map}")
 
@@ -160,10 +171,19 @@ def debugging():
 	#print(f"Glyph Set: {glyph_set}")
 	for glyf in glyph_set.keys():
 		width = glyph_set.get(glyf).width
+		lsb = glyph_set.get(glyf).lsb
 		# Height can often be None.
 		height = glyph_set.get(glyf).height
 		#pos.introspect("glyph: ", glyph_set.get(glyf))
-		print(f"glyf (in set): {glyf} -> width: {width}, height: {height}")
+		print(f"glyf (in set): {glyf} -> lsb: {lsb}, width: {width}, height: {height}")
+	
+	# ######################
+	# Dump out glyph order in font file
+	# ######################
+	glyph_order = tt.getGlyphOrder()
+	print(f"glyph_order:")
+	for idx in range(len(glyph_order)):
+		print(f"  {glyph_order[idx]} @ loc {idx}")
 
 	# ######################
 	# Get character code to glyph name map
@@ -194,8 +214,8 @@ def kern_test():
 	HEIGHT = 128
 	FONT_SIZE = 30
 	kilta_text = "Këkketë rin in tuirachún nútokolsa li"
-	kilta_text = "rin rin rin rin rin rin rin rin rin"
 	kilta_text = "rin rin rin"
+	kilta_text = "rin rin rin rin rin rin rin rin rin"
 	
 	kt = ku.KiltaTokenizer()
 	mastis_text = kt.romanized_to_mastis(kilta_text.strip())
@@ -229,13 +249,25 @@ def kern_test():
 	line_extent = ctx.glyph_extents(mastis_glyphs)
 	print(f"Kerned Glyph extents: {line_extent}")
 
+	# DEBUGGING
+	ctx.move_to(WIDTH / 2.0, HEIGHT / 2.0)
+	debug_text = kt.romanized_to_mastis("k")
+	debug_mastis = kf.get_glyph_index(debug_text[0])
+	debug_glyph = [cairo.Glyph(debug_mastis, WIDTH / 2.0, HEIGHT / 2.0 + 40)]
+	ctx.show_glyphs(debug_glyph)
+	ext = ctx.glyph_extents(debug_glyph)
+	print(f"ext of mastis 'k' is {ext}")
+
+	# Cleanup
 	del ctx
 	surface.write_to_png("hello.png")
 	del surface
 	print("Wrote image to hello.png")
 
 def main():
-	#debugging()
+	# The state of this function is forever in some debugging state.
+
+	debugging()
 	kern_test()
 	return
 
