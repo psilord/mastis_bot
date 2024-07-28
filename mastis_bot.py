@@ -11,7 +11,9 @@
 # https://pymotw.com/2/textwrap/
 # https://fonttools.readthedocs.io/en/latest/index.html
 # https://howchoo.com/g/ywi5m2vkodk/working-with-datetime-objects-and-timezones-in-python
-# discord API upgrade with intents caused me to find this next link.
+# discord API upgrade with intents caused me to find these next 3 links.
+# https://discordpy.readthedocs.io/en/latest/intents.html
+# https://discordpy.readthedocs.io/en/latest/api.html#discord.Intents
 # https://stackoverflow.com/questions/70920148/pycord-message-content-is-empty
 #
 # Crappy instructions to install:
