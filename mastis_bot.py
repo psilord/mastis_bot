@@ -11,6 +11,8 @@
 # https://pymotw.com/2/textwrap/
 # https://fonttools.readthedocs.io/en/latest/index.html
 # https://howchoo.com/g/ywi5m2vkodk/working-with-datetime-objects-and-timezones-in-python
+# discord API upgrade with intents caused me to find this next link.
+# https://stackoverflow.com/questions/70920148/pycord-message-content-is-empty
 #
 # Crappy instructions to install:
 # sudo apt install python3-dotenv
