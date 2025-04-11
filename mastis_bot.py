@@ -511,9 +511,10 @@ def main():
   print("Starting mastis_bot...")
   client = MastisBotClient(MASTIS_FONT)
   client.run(TOKEN)
+  return 0
 
 if __name__ == '__main__':
-  main()
+  os.sys.exit(main())
 
 
 
