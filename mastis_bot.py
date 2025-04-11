@@ -364,6 +364,31 @@ class MastisBotClient(discord.Client):
     print(f"   - Response message id: {rmsg.id}")
     return rmsg
 
+  async def command_test_history(self, message, arg):
+    # Get a time 10 years go from today.
+    utc_now = dt.datetime.now(dt.timezone.utc).timestamp()
+    timestamp = utc_now - (86400 * 365) * 10
+    timepoint = dt.datetime.fromtimestamp(timestamp, tz=dt.timezone.utc)
+
+    print(f" [Sending response]")
+    author_nickname = get_nick(message)
+    response = f"**{author_nickname}**: First three messages in this channel since {timestamp} epoch seconds!\n"
+
+    # Retrieve the messages.
+    hist_messages = \
+      [msg async for msg in message.channel.history(limit=3, after=timepoint)]
+
+    rbody = ""
+    for hmsg in hist_messages:
+      rbody += f"{hmsg.created_at}: {hmsg.author} - {hmsg.content}\n"
+
+    response += rbody;
+
+    print(f"   -|{response.rstrip()}")
+    rmsg = await self.send_or_edit_response(message, response, None)
+    print(f"   - Response message id: {rmsg.id}")
+    return rmsg
+
   async def command_unknown(self, message, cmd, arg):
     print(f" [Sending response]")
     author_nickname = get_nick(message)
@@ -480,6 +505,12 @@ class MastisBotClient(discord.Client):
       rmsg = await self.command_test_cairo(message, arg)
     elif cmd == "m":
       rmsg = await self.command_m(message, arg)
+    # Use this as a starting point for periodically getting chat history from
+    # these channels:
+    # #kíltui, #proposals, #grammar-and-vocab
+    # and then storing them in a sqlite3 db. Get reactions too.
+    #elif cmd == "test-history":
+    #  rmsg = await self.command_test_history(message, arg)
 
     # TODO: It is not possible to edit image attachement in Discord yet. 
     # So this test code is commented out until it works and I can continue.
