@@ -414,6 +414,12 @@ class MastisBotClient(discord.Client):
     print(f"{self.user} is connected to (at least) the guild:\n"
       f" - {guild.name}")
 
+    # what channels can the bot see?
+    channels = [ channel for channel in guild.channels ]
+    print('Viewable Channels:')
+    for channel in channels:
+      print(f" - {channel.name}")
+
     # what members can the bot see?
     members = '\n - '.join([member.name for member in guild.members])
     print(f'Viewable Guild Members:\n - {members}')
