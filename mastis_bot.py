@@ -27,6 +27,7 @@
 import os
 import re
 import discord
+import asyncio
 import math
 import cairo
 import textwrap as tw
@@ -239,6 +240,7 @@ class MastisBotClient(discord.Client):
     # how to layout the KiltaFont with kerning, etc.
     self.kilta_font = kf.KiltaFont(font_path)
 
+
   # ###################################################################
   # Utility Functions
   # ###################################################################
@@ -399,6 +401,70 @@ class MastisBotClient(discord.Client):
     print(f"   - Response message id: {rmsg.id}")
     return rmsg
 
+  # ############
+  # Periodic functions: Self spawning functions
+  # ############
+
+  # Since this is a coroutine, this won't do work unless it it capable of
+  # doing work.
+  async def periodic_archive(self, guild, seconds, channels_to_backup):
+    print(f"Channels to backup: {channels_to_backup}")
+    utc_now = dt.datetime.now(dt.timezone.utc).timestamp()
+    timestamp = utc_now - (86400 * 365) * 10
+    timepoint = dt.datetime.fromtimestamp(timestamp, tz=dt.timezone.utc)
+
+    all_channels = [ channel for channel in guild.channels ]
+
+    # 1. Filter which channels we're going to backup.
+    archive_channels = \
+      [ channel for channel in all_channels \
+          if channel.name in channels_to_backup ]
+    print(f"Archiving channels: {archive_channels}")
+
+    # Get the bot channel for updates during backup.
+    nivaután = \
+      [ channel for channel in all_channels if channel.name == "nivaután" ]
+    nivaután = nivaután[0]
+
+    if len(archive_channels) == 0:
+      await nivaután.send("mastis-bot: No channels to archive!")
+      return
+
+    # Technically this doesn't return, is this ok as a couroutine?
+    # Walk each channel and back it up.
+    iter = 0
+    while (True):
+      rbody = ""
+      await nivaután.send(f"mastis-bot: Attempting archive..")
+
+      # #############
+      # TODO: Right here, do the deal with the archive database. We'll have
+      # to get the correct timepoint from the DB and all that.
+      # #############
+
+      for channel in archive_channels:
+        # TODO: Do a test and print out the first three messages from all the
+        # channels we need to archive.
+
+        hist_messages = \
+          [msg async for msg in channel.history(limit=3, after=timepoint)]
+
+        rbody += f"\\\\----| **Archive of: {channel.name}**\n"
+        for hmsg in hist_messages:
+          rbody += f" |--> {hmsg.created_at}: {hmsg.author} - {hmsg.content}\n"
+        rbody += "\n"
+
+      await nivaután.send("mastis-bot thinks to archive:")
+      await nivaután.send(rbody)
+
+      # Now sleep...
+      # TODO: Account the time it took to do the work and subtract it from
+      # how much time I must wait.
+      await nivaután.send(f"mastis-bot sleeping {seconds} second!")
+      await asyncio.sleep(seconds)
+      await nivaután.send("mastis-bot timer expired!")
+      iter += 1
+
   # ###################################################################
   # Discord Client Interface
   # ###################################################################
@@ -415,9 +481,9 @@ class MastisBotClient(discord.Client):
       f" - {guild.name}")
 
     # what channels can the bot see?
-    channels = [ channel for channel in guild.channels ]
+    all_channels = [ channel for channel in guild.channels ]
     print('Viewable Channels:')
-    for channel in channels:
+    for channel in all_channels:
       print(f" - {channel.name}")
 
     # what members can the bot see?
@@ -427,6 +493,22 @@ class MastisBotClient(discord.Client):
     # What users can the bot see?
     users = '\n - '.join([user.name for user in self.users])
     print(f'Viewable Users:\n - {users}')
+
+    # Inform the channel the bot is up.
+    nivaután = \
+      [ channel for channel in all_channels if channel.name == "nivaután" ]
+    nivaután = nivaután[0]
+    await nivaután.send(f"**==========================**")
+    await nivaután.send(f"**== Mastis Bot is Ready! ==**")
+    await nivaután.send(f"**==========================**")
+
+    # Now, set up a coroutine that runs forever and periodically and
+    # backs up requested channels to the ArchiveDB database.
+    # TODO: Need to get perms for #grammar-and-vocab channel...
+    channels_to_backup = [ \
+      "kíltui", "updates", "proposals" \
+      ]
+    # await self.periodic_archive(guild, 15, channels_to_backup)
 
   async def on_message_delete(self, message):
     # Bot doesn't care if it deletes its own message.
