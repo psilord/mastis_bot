@@ -14,7 +14,9 @@
 # discord API upgrade with intents caused me to find these next 3 links.
 # https://discordpy.readthedocs.io/en/latest/intents.html
 # https://discordpy.readthedocs.io/en/latest/api.html#discord.Intents
+# https://discordpy.readthedocs.io/en/stable/api.html#channels
 # https://stackoverflow.com/questions/70920148/pycord-message-content-is-empty
+# https://stackoverflow.com/questions/66648995/how-to-set-a-timer-in-discord-py-while-enabling-other-codes
 #
 # Crappy instructions to install:
 # sudo apt install python3-dotenv
