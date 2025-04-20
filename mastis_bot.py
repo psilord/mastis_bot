@@ -28,6 +28,8 @@
 
 import os
 import re
+import datetime as dt
+import pytz
 import discord
 import asyncio
 import math
@@ -40,7 +42,7 @@ import font_helper as fh
 import kilta_utils as ku
 import kilta_date as kd
 import kilta_font as kf
-import datetime as dt
+import archive as ardb
 
 load_dotenv()
 
@@ -52,6 +54,7 @@ CHANNEL_NAME = os.getenv("DISCORD_CHANNEL_NAME")
 MASTIS_FONT = os.path.abspath(os.getenv("MASTIS_FONT"))
 
 
+# ############################
 def do_cairo():
   WIDTH, HEIGHT = 32, 32
 
@@ -93,9 +96,11 @@ def do_cairo():
 
   return memfs
 
+# ############################
 def do_layout_test(self):
   pass
 
+# ############################
 # This is horrible. Sorry.
 def do_translate(self, msg):
   # fixed width assumption, or at least maximum constraint
@@ -211,11 +216,13 @@ def do_translate(self, msg):
 
   return memfs
 
+# ############################
 def get_nick(message):
   # TODO: If the user left the guild, this is a User type, not a Member
   # type. Figure out the consequences of that.
   return message.author.display_name
 
+# ############################
 class MastisBotClient(discord.Client):
   # Inherited API:
   # https://discordpy.readthedocs.io/en/latest/api.html#client
@@ -241,12 +248,16 @@ class MastisBotClient(discord.Client):
     # Herein we set up the ability to get a cairo font face and
     # how to layout the KiltaFont with kerning, etc.
     self.kilta_font = kf.KiltaFont(font_path)
-
+    # Set up the arhive database
+    self.archive_db = ardb.ArchiveDB("kilta_guild_archive.db")
+    self.archive_db.open()
+    self.archive_db.init()
 
   # ###################################################################
   # Utility Functions
   # ###################################################################
 
+  # ############################
   # NOTE: This function is on hold for now. Discord doesn't yet allow
   # editing of attached images which is the primary reason for this
   # function's existence.
@@ -266,6 +277,8 @@ class MastisBotClient(discord.Client):
   # ###################################################################
   # mastis_bot Command Handlers
   # ###################################################################
+
+  # ############################
   async def command_help(self, message, arg):
     author_nickname = get_nick(message)
     response = f"**{author_nickname}**:\n" \
@@ -283,6 +296,7 @@ class MastisBotClient(discord.Client):
     print(f"   - Response message id: {rmsg.id}")
     return rmsg
 
+  # ############################
   async def command_aunka(self, message, arg):
     print(f" [Sending response]")
     author_nickname = get_nick(message)
@@ -293,6 +307,7 @@ class MastisBotClient(discord.Client):
     print(f"   - Response message id: {rmsg.id}")
     return rmsg
 
+  # ############################
   async def command_date(self, message, arg):
     print(f" [Sending response]")
     author_nickname = get_nick(message)
@@ -304,6 +319,7 @@ class MastisBotClient(discord.Client):
     print(f"   - Response message id: {rmsg.id}")
     return rmsg
 
+  # ############################
   # TODO: It is not possible to edit image attachement in Discord yet. 
   # So this test code is commented out until it works and I can continue.
   #async def command_set_target(self, message, arg):
@@ -315,6 +331,7 @@ class MastisBotClient(discord.Client):
   #  self.target_message_id = rmsg.id
   #  return rmsg
 
+  # ############################
   # TODO: It is not possible to edit image attachement in Discord yet. 
   # So this test code is commented out until it works and I can continue.
   #async def command_edit_target(self, message, arg):
@@ -327,6 +344,7 @@ class MastisBotClient(discord.Client):
   #    print(f"  - Edited: {ret}")
   #  return None
 
+  # ############################
   async def command_test_cairo(self, message, arg):
     # Testing is streaming a dynamically created svg image.
     print(f" [Sending response]")
@@ -341,6 +359,7 @@ class MastisBotClient(discord.Client):
     print(f"   - Response message id: {rmsg.id}")
     return rmsg
 
+  # ############################
   async def command_m(self, message, arg):
     print(f" [Sending response]")
     author_nickname = get_nick(message)
@@ -368,6 +387,7 @@ class MastisBotClient(discord.Client):
     print(f"   - Response message id: {rmsg.id}")
     return rmsg
 
+  # ############################
   async def command_test_history(self, message, arg):
     # Get a time 10 years go from today.
     utc_now = dt.datetime.now(dt.timezone.utc).timestamp()
@@ -393,6 +413,7 @@ class MastisBotClient(discord.Client):
     print(f"   - Response message id: {rmsg.id}")
     return rmsg
 
+  # ############################
   async def command_unknown(self, message, cmd, arg):
     print(f" [Sending response]")
     author_nickname = get_nick(message)
@@ -403,17 +424,15 @@ class MastisBotClient(discord.Client):
     print(f"   - Response message id: {rmsg.id}")
     return rmsg
 
-  # ############
-  # Periodic functions: Self spawning functions
-  # ############
+  # ###################################################################
+  # Periodic functions in a timer coroutine
+  # ##################################################################
 
+  # ############################
   # Since this is a coroutine, this won't do work unless it it capable of
   # doing work.
   async def periodic_archive(self, guild, seconds, channels_to_backup):
-    print(f"Channels to backup: {channels_to_backup}")
-    utc_now = dt.datetime.now(dt.timezone.utc).timestamp()
-    timestamp = utc_now - (86400 * 365) * 10
-    timepoint = dt.datetime.fromtimestamp(timestamp, tz=dt.timezone.utc)
+    print(f"Channels expected to be backed up: {channels_to_backup}")
 
     all_channels = [ channel for channel in guild.channels ]
 
@@ -421,57 +440,124 @@ class MastisBotClient(discord.Client):
     archive_channels = \
       [ channel for channel in all_channels \
           if channel.name in channels_to_backup ]
-    print(f"Archiving channels: {archive_channels}")
+
+    print(f"Archiving channels: {[chan.name for chan in archive_channels]}")
+
+    if len(channels_to_backup) != len(archive_channels):
+      print("ERROR: Can't backup some expected channels! Programmer error!")
+      os.sys.exit(1)
 
     # Get the bot channel for updates during backup.
     nivaután = \
-      [ channel for channel in all_channels if channel.name == "nivaután" ]
-    nivaután = nivaután[0]
+      discord.utils.find(lambda c: c.name == 'nivaután', guild.channels)
 
     if len(archive_channels) == 0:
-      await nivaután.send("mastis-bot: No channels to archive!")
+      #await nivaután.send("mastis-bot: No channels to archive!")
+      print("No channels to archive!")
       return
 
-    # Technically this doesn't return, is this ok as a couroutine?
+    # TODO: Technically this won't return, is this ok as a coroutine?
     # Walk each channel and back it up.
     iter = 0
     while (True):
-      rbody = ""
-      await nivaután.send(f"mastis-bot: Attempting archive..")
+      archive_stats = dict()
+      total_scan_seconds = 0
+      total_messages_archived = 0
 
-      # #############
-      # TODO: Right here, do the deal with the archive database. We'll have
-      # to get the correct timepoint from the DB and all that.
-      # #############
+      print("Performing Archive scan...")
 
       for channel in archive_channels:
-        # TODO: Do a test and print out the first three messages from all the
-        # channels we need to archive.
+        dbmsgs = []
+        rbody = f"--| **Archive of: {channel.name}, Iter: {iter}**\n"
 
+        scan_start_timestamp = dt.datetime.now(dt.timezone.utc).timestamp()
+
+        # First, we get the current synctime for the channel, everything
+        # AFTER this we're gonna store into the DB.
+        (after_timepoint_timestamp, after_timepoint) = \
+          self.archive_db.get_synctime(guild.name, channel.name)
+
+        # Then, we get the time we're going "up to", everything
+        # BEFORE this we're gonna store into the DB.
+        (before_timepoint_timestamp, before_timepoint) = \
+          self.archive_db.generate_new_synctime()
+
+        rbody += f"  |> After: {after_timepoint}, Before: {before_timepoint}\n"
+
+        # TODO: There is a race condition here if a message is exactly on either
+        # of the timepoints.. it can get lost in that case!
         hist_messages = \
-          [msg async for msg in channel.history(limit=3, after=timepoint)]
+          [msg async for msg in channel.history(limit=None,
+                                                after=after_timepoint,
+                                                before=before_timepoint,
+                                                )]
 
-        rbody += f"\\\\----| **Archive of: {channel.name}**\n"
+        # We assume the same guild and channel for replies
+        # (though this absolutely doesn't have to be true)
         for hmsg in hist_messages:
-          rbody += f" |--> {hmsg.created_at}: {hmsg.author} - {hmsg.content}\n"
-        rbody += "\n"
+          # rbody += f"  |> {hmsg.created_at}: {hmsg.author}\n"
 
-      await nivaután.send("mastis-bot thinks to archive:")
-      await nivaután.send(rbody)
+          ref_id = -1
+          if hmsg.reference and hmsg.reference.message_id:
+            ref_id = hmsg.reference.message_id
+
+          # Collect any reaction emojis if present.
+          reaction_emojis = \
+            " ".join([str(reaction.emoji) for reaction in hmsg.reactions])
+
+          dbmsgs.append(
+            ardb.ArchiveMsg(
+              guild.name,
+              channel.name,
+              hmsg.id,
+              hmsg.created_at,
+              hmsg.author.name,
+              hmsg.author.display_name,
+              hmsg.content,
+              ref_id,
+              reaction_emojis))
+
+        # If any messages arrived after the time range we picked, no big deal
+        # we will catch them next time.
+        stored = self.archive_db.insert(guild.name, channel.name, \
+          dbmsgs, before_timepoint_timestamp)
+        scan_stop_timestamp = dt.datetime.now(dt.timezone.utc).timestamp()
+
+        total_messages_archived = total_messages_archived + stored
+
+        archive_stats[channel.name] = scan_stop_timestamp - scan_start_timestamp
+        rbody += f"  |> Channel messages archived: {stored}\n"
+        rbody += f"  |> Channel scan seconds: {archive_stats[channel.name]}"
+        total_scan_seconds = total_scan_seconds + archive_stats[channel.name]
+        print(rbody)
+
+      rbody = f"  |> Total messages archived: {total_messages_archived}\n"
+      rbody += f"  |> Total scan seconds: {total_scan_seconds}"
+      print(rbody)
 
       # Now sleep...
-      # TODO: Account the time it took to do the work and subtract it from
-      # how much time I must wait.
-      await nivaután.send(f"mastis-bot sleeping {seconds} second!")
-      await asyncio.sleep(seconds)
-      await nivaután.send("mastis-bot timer expired!")
+
+      # Account the time it took to do the work and subtract it from
+      # how much time I must wait. If I blew up my time allotment, then wait
+      # arbitrarily twice as much as the time it took and see if it gets faster
+      # later.
+      wait_seconds = seconds - int(total_scan_seconds)
+      if wait_seconds < 0:
+        wait_seconds = int(total_scan_seconds) * 2
+
+      print(f"Completed archive scan. Sleeping {wait_seconds} second(s)!")
+      await asyncio.sleep(wait_seconds)
       iter += 1
 
   # ###################################################################
   # Discord Client Interface
   # ###################################################################
 
+  # ############################
   async def on_ready(self):
+    # Archive every 4 hours.
+    periodic_archive_seconds = 60 * 60 * 4
+
     print(f"self.user: {self.user} is ready!")
 
     guild = discord.utils.get(self.guilds, name = GUILD_NAME)
@@ -498,20 +584,19 @@ class MastisBotClient(discord.Client):
 
     # Inform the channel the bot is up.
     nivaután = \
-      [ channel for channel in all_channels if channel.name == "nivaután" ]
-    nivaután = nivaután[0]
-    await nivaután.send(f"**==========================**")
-    await nivaután.send(f"**== Mastis Bot is Ready! ==**")
-    await nivaután.send(f"**==========================**")
+      discord.utils.find(lambda c: c.name == 'nivaután', guild.channels)
+
+    # await nivaután.send(f"**Mastis Bot is Ready!**")
 
     # Now, set up a coroutine that runs forever and periodically and
     # backs up requested channels to the ArchiveDB database.
-    # TODO: Need to get perms for #grammar-and-vocab channel...
     channels_to_backup = [ \
-      "kíltui", "updates", "proposals" \
+      "kíltui", "updates", "proposals", "grammar-and-vocab", \
       ]
-    # await self.periodic_archive(guild, 15, channels_to_backup)
+    await self.periodic_archive(guild, periodic_archive_seconds, \
+            channels_to_backup)
 
+  # ############################
   async def on_message_delete(self, message):
     # Bot doesn't care if it deletes its own message.
     if message.author == self.user:
@@ -532,6 +617,7 @@ class MastisBotClient(discord.Client):
   
   # TODO: Handle bulk message deletes later.
 
+  # ############################
   async def on_message_edit(self, before, after):
     # Ensure that the bot cannot reply to itself!
     if before.author == self.user or after.author == self.user:
@@ -548,6 +634,7 @@ class MastisBotClient(discord.Client):
     print(f" After: ({after.author.display_name}, msg id: {after.id})")
     print(f"  - {after.content}")
 
+  # ############################
   async def on_message(self, message):
     # Ensure that the bot cannot reply to itself!
     if message.author == self.user:
@@ -628,12 +715,14 @@ class MastisBotClient(discord.Client):
     else:
       print("%-> No reply to add to cache!")
 
+# ############################
 def main():
   print("Starting mastis_bot...")
   client = MastisBotClient(MASTIS_FONT)
   client.run(TOKEN)
   return 0
 
+# ############################
 if __name__ == '__main__':
   os.sys.exit(main())
 
