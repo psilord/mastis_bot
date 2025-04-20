@@ -249,6 +249,7 @@ class MastisBotClient(discord.Client):
     # how to layout the KiltaFont with kerning, etc.
     self.kilta_font = kf.KiltaFont(font_path)
     # Set up the arhive database
+    self.archivingp = False
     self.archive_db = ardb.ArchiveDB("kilta_guild_archive.db")
     self.archive_db.open()
     self.archive_db.init()
@@ -434,6 +435,7 @@ class MastisBotClient(discord.Client):
   async def periodic_archive(self, guild, seconds, channels_to_backup):
     print(f"Channels expected to be backed up: {channels_to_backup}")
 
+    central_timezone = pytz.timezone('America/Chicago')
     all_channels = [ channel for channel in guild.channels ]
 
     # 1. Filter which channels we're going to backup.
@@ -464,7 +466,8 @@ class MastisBotClient(discord.Client):
       total_scan_seconds = 0
       total_messages_archived = 0
 
-      print("Performing Archive scan...")
+      now_local = dt.datetime.now(central_timezone)
+      print(f"Performing Archive Scan at America/Chicago time: {now_local}...")
 
       for channel in archive_channels:
         dbmsgs = []
@@ -593,8 +596,13 @@ class MastisBotClient(discord.Client):
     channels_to_backup = [ \
       "kíltui", "updates", "proposals", "grammar-and-vocab", \
       ]
-    await self.periodic_archive(guild, periodic_archive_seconds, \
-            channels_to_backup)
+
+    # Only start coroutine if it isn't already runniung since this on_ready()
+    # can be called more than once in the life of a client.
+    if self.archivingp == False:
+      self.archivingp = True
+      await self.periodic_archive(guild, periodic_archive_seconds, \
+              channels_to_backup)
 
   # ############################
   async def on_message_delete(self, message):
